@@ -18,7 +18,7 @@
 
 ### 🎯 What is MailGenius?
 
-**MailGenius** is not just another email client — it's your intelligent email assistant that understands context, prioritizes what matters, and drafts replies for you. Built on top of the incredible **[Zypher Agent](https://github.com/zypher-game/zypher-agent)** framework and the **Model Context Protocol (MCP)**, MailGenius showcases how modern AI agent architecture can transform overwhelming inboxes into organized, actionable workflows.
+**MailGenius** is not just another email client — it's your intelligent email assistant that understands context, prioritizes what matters, and drafts replies for you. Built on top of the incredible **[Zypher Agent](https://github.com/corespeed-io/zypher-agent)** framework and the **Model Context Protocol (MCP)**, MailGenius showcases how modern AI agent architecture can transform overwhelming inboxes into organized, actionable workflows.
 
 Think of it as having a brilliant executive assistant who:
 - 📊 **Instantly prioritizes** thousands of emails based on urgency and importance
@@ -278,7 +278,7 @@ MailGenius was built as a demonstration of what's possible when you combine Zyph
 
 ### 🎯 MailGenius 是什么？
 
-**MailGenius** 不仅仅是一个邮件客户端 — 它是一个能理解上下文、智能排序优先级、为你起草回复的 AI 邮件助手。基于杰出的 **[Zypher Agent](https://github.com/zypher-game/zypher-agent)** 框架和 **模型上下文协议（MCP）**，MailGenius 展示了现代 AI agent 架构如何将令人不堪重负的收件箱转化为井然有序的可执行工作流。
+**MailGenius** 不仅仅是一个邮件客户端 — 它是一个能理解上下文、智能排序优先级、为你起草回复的 AI 邮件助手。基于杰出的 **[Zypher Agent](https://github.com/corespeed-io/zypher-agent)** 框架和 **模型上下文协议（MCP）**，MailGenius 展示了现代 AI agent 架构如何将令人不堪重负的收件箱转化为井然有序的可执行工作流。
 
 想象一下拥有一位聪明的行政助理：
 - 📊 **瞬间优先排序** 数千封邮件，根据紧急程度和重要性
