@@ -4,7 +4,7 @@
 
 <div align="center">
 
-**Built with [Zypher Agent](https://github.com/zypher-game/zypher-agent) 🔥**
+**Built with [Zypher Agent](https://github.com/corespeed-io/zypher-agent) 🔥**
 
 *Powered by the most elegant and powerful AI agent framework*
 
@@ -45,7 +45,7 @@ The built-in AI assistant doesn't just answer questions — it understands what 
 - Natural conversation in **any language** — the AI mirrors your language automatically
 
 #### 🔌 **MCP Integration: Extensible Intelligence**
-Built on the **[Zypher Agent](https://github.com/zypher-game/zypher-agent)** framework with native **Model Context Protocol (MCP)** support, MailGenius can connect to any LLM provider (OpenAI, Anthropic, local models) and extend capabilities through MCP servers:
+Built on the **[Zypher Agent](https://github.com/corespeed-io/zypher-agent)** framework with native **Model Context Protocol (MCP)** support, MailGenius can connect to any LLM provider (OpenAI, Anthropic, local models) and extend capabilities through MCP servers:
 - Query emails with natural language
 - Create drafts programmatically
 - Integrate with your existing tools and workflows
@@ -305,7 +305,7 @@ AI 从发件人重要性、关键词（ASAP、紧急、deadline）和内容上�
 - 任何语言的自然对话 — AI 自动匹配你的语言
 
 #### 🔌 **MCP 集成：可扩展的智能**
-基于 **[Zypher Agent](https://github.com/zypher-game/zypher-agent)** 框架构建，原生支持**模型上下文协议（MCP）**，MailGenius 可以连接任何 LLM 提供商（OpenAI、Anthropic、本地模型）并通过 MCP 服务器扩展能力：
+基于 **[Zypher Agent](https://github.com/corespeed-io/zypher-agent)** 框架构建，原生支持**模型上下文协议（MCP）**，MailGenius 可以连接任何 LLM 提供商（OpenAI、Anthropic、本地模型）并通过 MCP 服务器扩展能力：
 - 用自然语言查询邮件
 - 以编程方式创建草稿
 - 集成你现有的工具和工作流
@@ -512,7 +512,7 @@ MIT 许可证 - 欢迎在你自己的项目中使用！
 
 ### 🙏 致谢
 
-如果没有 **[Zypher Agent]** 团队的杰出工作，这个项目是不可能实现的。
+如果没有 **[Zypher Agent](https://github.com/corespeed-io/zypher-agent)** 团队的杰出工作，这个项目是不可能实现的。
 
 **特别感谢 Zypher Agent 🌟**
 
