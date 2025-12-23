@@ -252,7 +252,7 @@ MIT License - feel free to use this in your own projects!
 
 ### 🙏 Acknowledgments
 
-This project would not have been possible without the exceptional work of the **[Zypher Agent](https://github.com/zypher-game/zypher-agent)** team.
+This project would not have been possible without the exceptional work of the **[Zypher Agent]** team.
 
 **Special Thanks to Zypher Agent 🌟**
 
@@ -512,7 +512,7 @@ MIT 许可证 - 欢迎在你自己的项目中使用！
 
 ### 🙏 致谢
 
-如果没有 **[Zypher Agent](https://github.com/zypher-game/zypher-agent)** 团队的杰出工作，这个项目是不可能实现的。
+如果没有 **[Zypher Agent]** 团队的杰出工作，这个项目是不可能实现的。
 
 **特别感谢 Zypher Agent 🌟**
 
