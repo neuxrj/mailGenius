@@ -13,7 +13,9 @@ exports.sendEmail = sendEmail;
 const googleapis_1 = require("googleapis");
 const sync_1 = require("./sync");
 const db_1 = require("./db");
+const logDb_1 = require("./logDb");
 const logger_1 = require("./logger");
+const LOG_SOURCE = 'src/mailer.ts';
 function encodeBase64Url(str) {
     return Buffer.from(str, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
 }
@@ -55,8 +57,10 @@ function sendEmail(auth, accountEmail, input) {
         const messageId = sendResult.data.id;
         if (!messageId) {
             (0, logger_1.log)('warn', 'sendEmail: missing message id in send response');
+            void (0, logDb_1.logInteraction)(LOG_SOURCE, `sendEmail missing message id to=${input.to} subject=${input.subject}`);
             return { id: null };
         }
+        void (0, logDb_1.logInteraction)(LOG_SOURCE, `sendEmail ok id=${messageId} to=${input.to} subject=${input.subject}`);
         // Fetch full message to store locally
         try {
             const fetched = yield gmail.users.messages.get({

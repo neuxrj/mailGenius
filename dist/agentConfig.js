@@ -14,6 +14,9 @@ const DEFAULT_CONFIG = {
     model: 'gemini-3',
     baseUrl: '',
     apiKey: '',
+    systemPrompt: '',
+    primaryEmail: '',
+    priorityAnalysisPrompt: '',
     mcpServers: [],
 };
 exports.AGENT_CONFIG_PATH = node_path_1.default.join(process.cwd(), 'agent-config.json');

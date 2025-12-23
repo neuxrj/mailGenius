@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MailAgent</title>
+  <title>MailGenius</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -51,6 +51,7 @@
       flex-shrink: 0;
       margin-bottom: 20px;
       padding: 0 12px;
+      position: relative;
     }
 
     .eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 12px; color: var(--muted); }
@@ -352,9 +353,9 @@
 <body>
 <div class="frame">
   <header>
-    <div class="eyebrow">MailAgent</div>
-    <h1>Gmail → SQLite</h1>
-    <p class="subtitle">连接 Gmail，导入数据，与你的邮件对话。</p>
+    <div class="eyebrow">MailGenius</div>
+    <p class="subtitle" data-i18n="subtitle">连接 Gmail，导入数据，与你的邮件对话。</p>
+    <button id="lang-toggle" class="secondary" style="position: absolute; top: 20px; right: 20px;">EN/中</button>
   </header>
 
   <section class="card" id="home-view">
@@ -362,35 +363,35 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div class="status-pill" id="status-pill" data-active="false">
           <span class="status-dot"></span>
-          <span id="status-text">正在检查授权状态...</span>
+          <span id="status-text" data-i18n="checking_auth">正在检查授权状态...</span>
         </div>
       </div>
 
       <div id="home-summary" class="subtitle" style="font-size:1.1rem; color:var(--ink);"></div>
 
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <button id="login-btn">连接 Gmail</button>
-        <button id="enter-btn" class="secondary">进入邮件管理</button>
-        <button id="show-import-btn" class="secondary">继续导入邮件</button>
+        <button id="login-btn" data-i18n="connect_gmail">连接 Gmail</button>
+        <button id="enter-btn" class="secondary" data-i18n="enter_manager">进入邮件管理</button>
+        <button id="show-import-btn" class="secondary" data-i18n="continue_import">继续导入邮件</button>
       </div>
 
       <div id="import-panel" class="hidden" style="margin-top: 10px; padding-top:20px; border-top:1px solid var(--border);">
-        <h2 style="font-size:1.2rem; margin:0 0 12px;">导入邮件</h2>
+        <h2 style="font-size:1.2rem; margin:0 0 12px;" data-i18n="import_emails">导入邮件</h2>
         <form id="range-form" style="display: grid; gap: 12px;">
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-            <div><label style="font-size:0.8rem; color:var(--muted)">From</label><input id="from-date" type="date" required /></div>
-            <div><label style="font-size:0.8rem; color:var(--muted)">To</label><input id="to-date" type="date" required /></div>
+            <div><label style="font-size:0.8rem; color:var(--muted)" data-i18n="from">From</label><input id="from-date" type="date" required /></div>
+            <div><label style="font-size:0.8rem; color:var(--muted)" data-i18n="to">To</label><input id="to-date" type="date" required /></div>
           </div>
-          <button id="sync-btn" type="submit">开始导入（写入 SQLite）</button>
+          <button id="sync-btn" type="submit" data-i18n="start_import">开始导入（写入 SQLite）</button>
         </form>
-        <div class="subtitle" style="margin-top: 10px; font-size:0.8rem;">
+        <div class="subtitle" style="margin-top: 10px; font-size:0.8rem;" data-i18n="import_note">
           数据写入 <code>gmail.sqlite</code>。重复时间段会自动去重。
         </div>
       </div>
 
       <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:10px;">
-        <strong style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;">系统日志</strong>
-        <div id="log" class="subtitle" style="font-size:0.9rem;">等待操作。</div>
+        <strong style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;" data-i18n="system_log">系统日志</strong>
+        <div id="log" class="subtitle" style="font-size:0.9rem;" data-i18n="waiting">等待操作。</div>
       </div>
     </div>
   </section>
@@ -398,10 +399,10 @@
   <section id="manager-view" class="hidden">
     <div class="manager-topbar">
       <div class="left" style="display:flex; align-items:center; gap:12px;">
-        <button id="back-home-btn" class="secondary" type="button" style="padding:6px 12px;">← 首页</button>
+        <button id="back-home-btn" class="secondary" type="button" style="padding:6px 12px;" data-i18n="home">← 首页</button>
         <div class="status-pill" id="manager-pill" data-active="true">
           <span class="status-dot"></span>
-          <span id="manager-email">未连接</span>
+          <span id="manager-email" data-i18n="not_connected">未连接</span>
         </div>
         <span class="subtitle" id="manager-count" style="font-size:0.85rem"></span>
       </div>
@@ -410,16 +411,16 @@
         <div class="sync-widget" title="自动后台拉取新邮件">
           <label>
             <input id="auto-sync-toggle" type="checkbox" style="accent-color: var(--accent); width:auto;" />
-            <span>自动同步</span>
+            <span data-i18n="auto_sync">自动同步</span>
           </label>
           <div id="auto-sync-options" style="display:flex; align-items:center; gap:4px; border-left:1px solid var(--border); padding-left:8px; margin-left:4px;">
             <input id="auto-sync-interval" type="number" min="1" step="1" value="30" />
-            <span style="font-size:0.8rem; color:var(--muted)">分钟</span>
+            <span style="font-size:0.8rem; color:var(--muted)" data-i18n="min">分钟</span>
           </div>
         </div>
 
-        <button id="import-more-btn" class="secondary" type="button" style="padding:8px 14px;">导入</button>
-        <button id="refresh-list-btn" class="secondary" type="button" style="padding:8px 14px;">刷新</button>
+        <button id="import-more-btn" class="secondary" type="button" style="padding:8px 14px;" data-i18n="import">导入</button>
+        <button id="refresh-list-btn" class="secondary" type="button" style="padding:8px 14px;" data-i18n="refresh">刷新</button>
       </div>
     </div>
 
@@ -429,74 +430,88 @@
         <div class="mail-content-wrapper">
 
           <div class="toolbar" style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px; margin-top:20px;">
-            <button id="tab-inbox" class="secondary">收件箱</button>
-            <button id="tab-sent" class="secondary">已发送</button>
-            <button id="tab-compose" class="secondary">写邮件</button>
+            <button id="tab-inbox" class="secondary" data-i18n="inbox">收件箱</button>
+            <button id="tab-sent" class="secondary" data-i18n="sent">已发送</button>
+            <button id="tab-compose" class="secondary" data-i18n="compose">写邮件</button>
           </div>
 
           <div id="list-panel">
             <div class="toolbar" id="inbox-toolbar">
-              <select id="order-select" style="width:auto;"><option value="desc">时间：倒序</option><option value="asc">时间：正序</option></select>
-              <select id="read-filter" style="width:auto;"><option value="all">全部</option><option value="unread">未读</option><option value="read">已读</option></select>
-              <button id="load-btn" class="secondary" type="button">加载</button>
+              <select id="order-select" style="width:auto;">
+                <option value="desc" data-i18n="time_desc">时间：倒序</option>
+                <option value="asc" data-i18n="time_asc">时间：正序</option>
+              </select>
+              <select id="read-filter" style="width:auto;">
+                <option value="all" data-i18n="all_read">全部</option>
+                <option value="unread" data-i18n="unread_filter">未读</option>
+                <option value="read" data-i18n="read_filter">已读</option>
+              </select>
+              <select id="priority-filter" style="width:auto;">
+                <option value="all" data-i18n="all_priority">全部优先级</option>
+                <option value="2" data-i18n="high_priority_opt">🔴 高优先级</option>
+                <option value="1" data-i18n="low_priority_opt">⚪ 低优先级</option>
+                <option value="0" data-i18n="not_analyzed_opt">🤔 未分析</option>
+              </select>
+              <button id="load-btn" class="secondary" type="button" data-i18n="load">加载</button>
             </div>
 
-            <div class="toolbar" id="search-toolbar" style="gap:10px; flex-wrap:wrap; align-items:flex-end;">
+            <!-- Search toolbar temporarily hidden - feature not yet implemented -->
+            <div class="toolbar hidden" id="search-toolbar" style="gap:10px; flex-wrap:wrap; align-items:flex-end;">
               <div style="display:grid; gap:6px;">
-                <label class="footer">发件人</label>
-                <input id="search-from" type="text" placeholder="sender@example.com" />
+                <label class="footer" data-i18n="sender">发件人</label>
+                <input id="search-from" type="text" data-i18n-placeholder="search_ph_sender" placeholder="sender@example.com" />
               </div>
               <div style="display:grid; gap:6px;">
-                <label class="footer">主题</label>
-                <input id="search-subject" type="text" placeholder="关键词" />
+                <label class="footer" data-i18n="subject">主题</label>
+                <input id="search-subject" type="text" data-i18n-placeholder="search_ph_subject" placeholder="关键词" />
               </div>
-              <button id="search-btn" class="secondary" type="button">搜索</button>
+              <button id="search-btn" class="secondary" type="button" data-i18n="search">搜索</button>
             </div>
 
             <div class="toolbar hidden" id="sent-toolbar">
               <input type="date" id="sent-from" style="width:auto;" />
               <span style="color:var(--muted)">-</span>
               <input type="date" id="sent-to" style="width:auto;" />
-              <button id="sent-refresh" class="secondary" type="button">刷新</button>
+              <button id="sent-refresh" class="secondary" type="button" data-i18n="refresh">刷新</button>
             </div>
 
             <div id="mail-list" class="list"></div>
 
             <div id="pagination-toolbar" class="pagination-bar">
-              <button id="page-prev" class="secondary" type="button">← 上一页</button>
+              <button id="page-prev" class="secondary" type="button" data-i18n="prev_page">← 上一页</button>
               <div id="page-indicator" class="page-indicator">第 1 页</div>
-              <button id="page-next" class="secondary" type="button">下一页 →</button>
+              <button id="page-next" class="secondary" type="button" data-i18n="next_page">下一页 →</button>
             </div>
           </div>
 
           <div id="detail-panel" class="hidden" style="padding: 0 20px 20px 20px;">
             <div class="back-row" style="display: flex; justify-content: space-between; margin-bottom: 16px; align-items:center;">
-              <button id="back-list-btn" class="back-btn secondary" type="button">← 返回列表</button>
-              <button id="reply-btn" class="secondary" type="button" disabled>回复</button>
+              <button id="back-list-btn" class="back-btn secondary" type="button" data-i18n="back_list">← 返回列表</button>
+              <button id="reply-btn" class="secondary" type="button" disabled data-i18n="reply">回复</button>
             </div>
-            <h2 id="detail-subject" style="margin: 0 0 10px;">选择一封邮件</h2>
+            <h2 id="detail-subject" style="margin: 0 0 10px;" data-i18n="select_mail">选择一封邮件</h2>
             <div class="mail-meta" id="detail-meta" style="margin-bottom: 20px;"></div>
-            <div id="detail-body" class="detail-body">未选择邮件。</div>
+            <div id="detail-body" class="detail-body" data-i18n="no_mail_selected">未选择邮件。</div>
           </div>
 
           <div id="compose-panel" class="hidden" style="padding: 0 20px 20px 20px;">
-            <h3 style="margin-top:0;">写邮件</h3>
+            <h3 style="margin-top:0;" data-i18n="compose">写邮件</h3>
             <form id="compose-form" class="range" style="display:grid; gap:15px;">
               <div>
-                <label style="font-size:0.8rem;color:var(--muted)">草稿箱</label>
+                <label style="font-size:0.8rem;color:var(--muted)" data-i18n="drafts">草稿箱</label>
                 <div style="display:flex; gap:10px;">
                   <select id="draft-select" style="flex:1;">
-                    <option value="">选择草稿（按主题）</option>
+                    <option value="" data-i18n="draft_select_default">选择草稿（按主题）</option>
                   </select>
-                  <button id="draft-refresh" class="secondary" type="button">刷新</button>
+                  <button id="draft-refresh" class="secondary" type="button" data-i18n="refresh_drafts">刷新</button>
                 </div>
               </div>
-              <div><label style="font-size:0.8rem;color:var(--muted)">收件人</label><input id="compose-to" type="email" required /></div>
-              <div><label style="font-size:0.8rem;color:var(--muted)">主题</label><input id="compose-subject" type="text" required /></div>
-              <div><textarea id="compose-body" style="min-height: 250px;" placeholder="正文内容..."></textarea></div>
+              <div><label style="font-size:0.8rem;color:var(--muted)" data-i18n="to">收件人</label><input id="compose-to" type="email" required /></div>
+              <div><label style="font-size:0.8rem;color:var(--muted)" data-i18n="subject">主题</label><input id="compose-subject" type="text" required /></div>
+              <div><textarea id="compose-body" style="min-height: 250px;" data-i18n-placeholder="compose_ph" placeholder="正文内容..."></textarea></div>
               <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button id="draft-save" class="secondary" type="button">保存草稿</button>
-                <button id="compose-send" type="submit">发送邮件</button>
+                <button id="draft-save" class="secondary" type="button" data-i18n="save_draft">保存草稿</button>
+                <button id="compose-send" type="submit" data-i18n="send_email">发送邮件</button>
               </div>
             </form>
           </div>
@@ -507,24 +522,24 @@
         <div class="chat-header">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <h2 style="margin:0; font-size:1.1rem;">Agent</h2>
-            <button id="agent-config-toggle" class="secondary" type="button" style="padding:4px 10px; font-size:0.8rem;">⚙ 设置</button>
+            <button id="agent-config-toggle" class="secondary" type="button" style="padding:4px 10px; font-size:0.8rem;" data-i18n="agent_settings">⚙ 设置</button>
           </div>
           <div class="chat-session-controls" style="display:flex; gap:8px;">
             <select id="agent-session-select" style="font-size:0.85rem; padding:6px; flex:1;"></select>
             <button id="agent-new-session" class="secondary" type="button" style="padding:6px 10px;">+</button>
           </div>
-          <div class="footer" id="agent-status" style="margin-top:6px; font-size:0.75rem; color:var(--muted);">未配置</div>
+          <div class="footer" id="agent-status" style="margin-top:6px; font-size:0.75rem; color:var(--muted);" data-i18n="agent_not_configured">未配置</div>
         </div>
 
         <div id="agent-config-panel" class="chat-config-panel hidden">
-          <h4 style="margin:0 0 12px;">LLM 配置</h4>
+          <h4 style="margin:0 0 12px;" data-i18n="llm_config">LLM 配置</h4>
           <div style="display:grid; gap:12px;">
-            <input id="agent-api-key" type="password" placeholder="API Key" />
-            <input id="agent-base-url" type="text" placeholder="Base URL (可选)" />
-            <input id="agent-model" type="text" placeholder="Model (e.g. gemini-3)" />
-            <input id="agent-primary-email" type="email" placeholder="主要邮箱 (例如: you@example.com)" />
-            <textarea id="agent-system-prompt" placeholder="System Prompt (例如: 你是一个...助手)"></textarea>
-            <button id="agent-save-btn" type="button">保存配置</button>
+            <input id="agent-api-key" type="password" data-i18n-placeholder="agent_ph_key" placeholder="API Key" />
+            <input id="agent-base-url" type="text" data-i18n-placeholder="agent_ph_url" placeholder="Base URL (可选)" />
+            <input id="agent-model" type="text" data-i18n-placeholder="agent_ph_model" placeholder="Model (e.g. gemini-3)" />
+            <input id="agent-primary-email" type="email" data-i18n-placeholder="agent_ph_email" placeholder="主要邮箱 (例如: you@example.com)" />
+            <textarea id="agent-system-prompt" data-i18n-placeholder="agent_ph_prompt" placeholder="System Prompt (例如: 你是一个...助手)"></textarea>
+            <button id="agent-save-btn" type="button" data-i18n="save_config">保存配置</button>
           </div>
         </div>
 
@@ -532,10 +547,10 @@
           <div id="agent-messages" class="chat-messages"></div>
 
           <div class="chat-input-area">
-            <div class="footer" id="agent-hint" style="font-size:0.75rem; color:var(--muted);">准备就绪。</div>
-            <textarea id="chat-text" placeholder="输入指令 (Ctrl+Enter 发送)..." onkeydown="if(event.ctrlKey && event.keyCode==13){document.getElementById('chat-send').click();}"></textarea>
+            <div class="footer" id="agent-hint" style="font-size:0.75rem; color:var(--muted);" data-i18n="ready_hint">准备就绪。</div>
+            <textarea id="chat-text" data-i18n-placeholder="chat_ph" placeholder="输入指令 (Ctrl+Enter 发送)..." onkeydown="if(event.ctrlKey && event.keyCode==13){document.getElementById('chat-send').click();}"></textarea>
             <div style="text-align:right;">
-              <button id="chat-send" type="button" style="padding:8px 24px;">发送</button>
+              <button id="chat-send" type="button" style="padding:8px 24px;" data-i18n="send">发送</button>
             </div>
           </div>
         </div>
@@ -546,6 +561,277 @@
 </div>
 
 <script>
+  const translations = {
+    zh: {
+      app_title: 'MailGenius',
+      subtitle: '连接 Gmail，导入数据，与你的邮件对话。',
+      checking_auth: '正在检查授权状态...',
+      authorized: '已授权',
+      not_connected: '未连接',
+      connected_email: '已连接：{email}',
+      connected_default: '已连接',
+      connect_prompt: '请先连接 Gmail（OAuth 授权）。',
+      imported_summary: '已为 {email} 导入 {importedCount} 封邮件',
+      imported_count: '已导入：{importedCount} 封',
+      status_check_fail: '状态检查失败',
+      importing: '正在导入...',
+      skipped_import: '已跳过：该范围之前导入过（{email}，{from} ~ {to}）。已导入总数：{importedCount}',
+      import_complete: '导入完成：为 {email} 处理 {processed} 封邮件（{from} ~ {to}）。已导入总数：{importedCount}',
+      error_prefix: '错误：{msg}',
+      fill_required: '请填写收件人和主题',
+      sending: '正在发送...',
+      send_success: '发送成功',
+      send_fail: '发送失败：{msg}',
+      draft_saved: '草稿已保存。',
+      fill_required_draft: '请填写收件人和主题后再保存草稿。',
+      reply_prefix: 'Re: ',
+      original_mail: '\n\n--- 原邮件 ---\n',
+      agent_configured: '已配置',
+      agent_not_configured: '未配置',
+      agent_ready: '可以开始对话。',
+      agent_need_config: '请先配置 LLM API Key。',
+      config_load_fail: '配置加载失败',
+      config_save_fail: '保存失败',
+      search_loading: '搜索中...',
+      search_no_criteria: '请至少输入一个搜索条件。',
+      loading: '加载中...',
+      page_num: '第 {page} 页',
+      no_mail: '没有邮件（或尚未导入）。',
+      no_subject: '(无主题)',
+      unknown_sender: '未知发件人',
+      unknown_date: '未知日期',
+      read: '已读',
+      unread: '未读',
+      high_priority: '🔴 高',
+      low_priority: '⚪ 低',
+      not_analyzed: '🤔 未分析',
+      select_mail: '选择一封邮件',
+      no_mail_selected: '未选择邮件。',
+      draft_select_default: '选择草稿（按主题）',
+      draft_load_fail: '草稿加载失败',
+      connect_gmail: '连接 Gmail',
+      enter_manager: '进入邮件管理',
+      continue_import: '继续导入邮件',
+      import_emails: '导入邮件',
+      from: 'From',
+      to: 'To',
+      start_import: '开始导入（写入 SQLite）',
+      import_note: '数据写入 <code>gmail.sqlite</code>。重复时间段会自动去重。',
+      system_log: '系统日志',
+      waiting: '等待操作。',
+      home: '← 首页',
+      auto_sync: '自动同步',
+      min: '分钟',
+      import: '导入',
+      refresh: '刷新',
+      inbox: '收件箱',
+      sent: '已发送',
+      compose: '写邮件',
+      time_desc: '时间：倒序',
+      time_asc: '时间：正序',
+      all_read: '全部',
+      unread_filter: '未读',
+      read_filter: '已读',
+      all_priority: '全部优先级',
+      high_priority_opt: '🔴 高优先级',
+      low_priority_opt: '⚪ 低优先级',
+      not_analyzed_opt: '🤔 未分析',
+      load: '加载',
+      sender: '发件人',
+      subject: '主题',
+      search: '搜索',
+      prev_page: '← 上一页',
+      next_page: '下一页 →',
+      back_list: '← 返回列表',
+      reply: '回复',
+      drafts: '草稿箱',
+      refresh_drafts: '刷新',
+      save_draft: '保存草稿',
+      send_email: '发送邮件',
+      agent_settings: '⚙ 设置',
+      llm_config: 'LLM 配置',
+      save_config: '保存配置',
+      ready_hint: '准备就绪。',
+      send: '发送',
+      search_ph_sender: 'sender@example.com',
+      search_ph_subject: '关键词',
+      compose_ph: '正文内容...',
+      agent_ph_key: 'API Key',
+      agent_ph_url: 'Base URL (可选)',
+      agent_ph_model: 'Model (e.g. gemini-3)',
+      agent_ph_email: '主要邮箱 (例如: you@example.com)',
+      agent_ph_prompt: 'System Prompt (例如: 你是一个...助手)',
+      chat_ph: '输入指令 (Ctrl+Enter 发送)...',
+      hint_mcp_approve: 'MCP 依赖需要执行 `deno approve-scripts`，或改用 Node + tsx 启动 MCP。',
+      hint_mcp_connect_fail: 'MCP 未能启动。请确认 `npm install` 已完成且 `gmail.sqlite` 存在。',
+      hint_install_deps: '本地依赖可能未安装完成，请先运行 `npm install`。'
+    },
+    en: {
+      app_title: 'MailGenius',
+      subtitle: 'Connect Gmail, import data, chat with your emails.',
+      checking_auth: 'Checking authorization status...',
+      authorized: 'Authorized',
+      not_connected: 'Not Connected',
+      connected_email: 'Connected: {email}',
+      connected_default: 'Connected',
+      connect_prompt: 'Please connect Gmail (OAuth).',
+      imported_summary: 'Imported {importedCount} emails for {email}',
+      imported_count: 'Imported: {importedCount}',
+      status_check_fail: 'Status check failed',
+      importing: 'Importing...',
+      skipped_import: 'Skipped: Range already imported ({email}, {from} ~ {to}). Total: {importedCount}',
+      import_complete: 'Import complete: Processed {processed} emails for {email} ({from} ~ {to}). Total: {importedCount}',
+      error_prefix: 'Error: {msg}',
+      fill_required: 'Please fill in recipient and subject',
+      sending: 'Sending...',
+      send_success: 'Sent successfully',
+      send_fail: 'Send failed: {msg}',
+      draft_saved: 'Draft saved.',
+      fill_required_draft: 'Please fill in recipient and subject before saving.',
+      reply_prefix: 'Re: ',
+      original_mail: '\n\n--- Original Message ---\n',
+      agent_configured: 'Configured',
+      agent_not_configured: 'Not Configured',
+      agent_ready: 'Ready to chat.',
+      agent_need_config: 'Please configure LLM API Key first.',
+      config_load_fail: 'Failed to load config',
+      config_save_fail: 'Save failed',
+      search_loading: 'Searching...',
+      search_no_criteria: 'Please enter at least one search criteria.',
+      loading: 'Loading...',
+      page_num: 'Page {page}',
+      no_mail: 'No emails (or not imported yet).',
+      no_subject: '(No Subject)',
+      unknown_sender: 'Unknown Sender',
+      unknown_date: 'Unknown Date',
+      read: 'Read',
+      unread: 'Unread',
+      high_priority: '🔴 High',
+      low_priority: '⚪ Low',
+      not_analyzed: '🤔 N/A',
+      select_mail: 'Select an email',
+      no_mail_selected: 'No email selected.',
+      draft_select_default: 'Select Draft (by subject)',
+      draft_load_fail: 'Failed to load drafts',
+      connect_gmail: 'Connect Gmail',
+      enter_manager: 'Enter Mail Manager',
+      continue_import: 'Continue Importing',
+      import_emails: 'Import Emails',
+      from: 'From',
+      to: 'To',
+      start_import: 'Start Import (Write to SQLite)',
+      import_note: 'Data written to <code>gmail.sqlite</code>. Duplicates removed.',
+      system_log: 'System Log',
+      waiting: 'Waiting for operation.',
+      home: '← Home',
+      auto_sync: 'Auto Sync',
+      min: 'min',
+      import: 'Import',
+      refresh: 'Refresh',
+      inbox: 'Inbox',
+      sent: 'Sent',
+      compose: 'Compose',
+      time_desc: 'Time: Desc',
+      time_asc: 'Time: Asc',
+      all_read: 'All',
+      unread_filter: 'Unread',
+      read_filter: 'Read',
+      all_priority: 'All Priorities',
+      high_priority_opt: '🔴 High Priority',
+      low_priority_opt: '⚪ Low Priority',
+      not_analyzed_opt: '🤔 Not Analyzed',
+      load: 'Load',
+      sender: 'Sender',
+      subject: 'Subject',
+      search: 'Search',
+      prev_page: '← Prev',
+      next_page: 'Next →',
+      back_list: '← Back to List',
+      reply: 'Reply',
+      drafts: 'Drafts',
+      refresh_drafts: 'Refresh',
+      save_draft: 'Save Draft',
+      send_email: 'Send Email',
+      agent_settings: '⚙ Settings',
+      llm_config: 'LLM Config',
+      save_config: 'Save Config',
+      ready_hint: 'Ready.',
+      send: 'Send',
+      search_ph_sender: 'sender@example.com',
+      search_ph_subject: 'Keywords',
+      compose_ph: 'Body content...',
+      agent_ph_key: 'API Key',
+      agent_ph_url: 'Base URL (Optional)',
+      agent_ph_model: 'Model (e.g. gemini-3)',
+      agent_ph_email: 'Primary Email (e.g. you@example.com)',
+      agent_ph_prompt: 'System Prompt (e.g. You are a helper...)',
+      chat_ph: 'Enter command (Ctrl+Enter to send)...',
+      hint_mcp_approve: 'MCP dependencies require `deno approve-scripts`, or use Node + tsx to start MCP.',
+      hint_mcp_connect_fail: 'MCP failed to start. Please ensure `npm install` is completed and `gmail.sqlite` exists.',
+      hint_install_deps: 'Local dependencies may not be installed. Please run `npm install`.'
+    }
+  };
+
+  let currentLang = 'zh';
+  let currentEmail = null;
+
+  function t(key, params = {}) {
+    let str = translations[currentLang][key] || key;
+    for (const [k, v] of Object.entries(params)) {
+      str = str.replace('{' + k + '}', v);
+    }
+    return str;
+  }
+
+  function updatePageLanguage() {
+    document.title = t('app_title');
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (translations[currentLang][key]) {
+        if (key === 'import_note') el.innerHTML = translations[currentLang][key];
+        else el.textContent = translations[currentLang][key];
+      }
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.dataset.i18nPlaceholder;
+      if (translations[currentLang][key]) {
+        el.placeholder = translations[currentLang][key];
+      }
+    });
+
+    if (cachedProfile) {
+      homeSummary.textContent = t('imported_summary', {email: cachedProfile.email, importedCount: cachedProfile.importedCount});
+      managerCount.textContent = t('imported_count', {importedCount: cachedProfile.importedCount});
+    } else {
+      const isAuthorized = statusPill.dataset.active === 'true';
+      if (isAuthorized) {
+        homeSummary.textContent = currentEmail ? t('connected_email', {email: currentEmail}) : t('connected_default');
+      } else {
+        homeSummary.textContent = t('connect_prompt');
+      }
+    }
+
+    // Update status text based on current state
+    const isAuthorized = statusPill.dataset.active === 'true';
+    statusText.textContent = isAuthorized ? t('authorized') : (statusText.textContent === t('checking_auth') ? t('checking_auth') : t('not_connected'));
+
+    if (currentView === 'sent') {
+      pageIndicator.textContent = t('page_num', {page: sentPage});
+    } else {
+      pageIndicator.textContent = t('page_num', {page: inboxPage});
+    }
+  }
+
+  document.getElementById('lang-toggle').addEventListener('click', () => {
+    currentLang = currentLang === 'zh' ? 'en' : 'zh';
+    updatePageLanguage();
+    // Refresh list to update dynamic content like dates or priorities if we were to translate them deeply
+    // For now, just re-rendering the list if it's there
+    if (!listPanel.classList.contains('hidden')) {
+      loadActiveList();
+    }
+  });
+
   const homeView = document.getElementById('home-view')
   const managerView = document.getElementById('manager-view')
 
@@ -592,6 +878,7 @@
   const replyBtn = document.getElementById('reply-btn')
   const orderSelect = document.getElementById('order-select')
   const readFilter = document.getElementById('read-filter')
+  const priorityFilter = document.getElementById('priority-filter')
   const loadBtn = document.getElementById('load-btn')
   const tabInbox = document.getElementById('tab-inbox')
   const tabSent = document.getElementById('tab-sent')
@@ -719,15 +1006,15 @@
   const loadDrafts = async () => {
     try {
       const data = await fetchJson('/api/drafts')
-      draftSelect.innerHTML = '<option value="">选择草稿（按主题）</option>'
+      draftSelect.innerHTML = '<option value="">' + t('draft_select_default') + '</option>'
       data.drafts.forEach((draft) => {
         const option = document.createElement('option')
         option.value = draft.id
-        option.textContent = draft.subject || '(无主题)'
+        option.textContent = draft.subject || t('no_subject')
         draftSelect.appendChild(option)
       })
     } catch (err) {
-      draftSelect.innerHTML = '<option value="">草稿加载失败</option>'
+      draftSelect.innerHTML = '<option value="">' + t('draft_load_fail') + '</option>'
     }
   }
 
@@ -744,15 +1031,16 @@
 
   const setStatus = (authorized, email) => {
     statusPill.dataset.active = authorized ? 'true' : 'false'
-    statusText.textContent = authorized ? '已授权' : '未连接'
+    statusText.textContent = authorized ? t('authorized') : t('not_connected')
     loginBtn.disabled = authorized
     enterBtn.disabled = !authorized
     showImportBtn.disabled = !authorized
     syncBtn.disabled = !authorized
+    currentEmail = email;
     if (authorized) {
-      homeSummary.textContent = email ? `已连接：${email}` : '已连接'
+      homeSummary.textContent = email ? t('connected_email', {email}) : t('connected_default')
     } else {
-      homeSummary.textContent = '请先连接 Gmail（OAuth 授权）。'
+      homeSummary.textContent = t('connect_prompt')
     }
   }
 
@@ -807,7 +1095,7 @@
   }
 
   const refreshProfile = async () => {
-    statusText.textContent = '正在检查授权状态...'
+    statusText.textContent = t('checking_auth')
     try {
       const data = await fetchJson('/api/profile')
       if (!data.authorized) {
@@ -818,16 +1106,16 @@
       }
       cachedProfile = data
       setStatus(true, data.email)
-      homeSummary.textContent = `已为 ${data.email} 导入 ${data.importedCount} 封邮件`
+      homeSummary.textContent = t('imported_summary', {email: data.email, importedCount: data.importedCount})
       managerEmail.textContent = data.email
-      managerCount.textContent = `已导入：${data.importedCount} 封`
+      managerCount.textContent = t('imported_count', {importedCount: data.importedCount})
       if (!homeView.classList.contains('hidden')) {
         showManager()
         showList()
       }
       await loadList()
     } catch (err) {
-      statusText.textContent = '状态检查失败'
+      statusText.textContent = t('status_check_fail')
     }
   }
 
@@ -893,6 +1181,7 @@
   loadBtn.addEventListener('click', loadList)
   orderSelect.addEventListener('change', loadList)
   readFilter.addEventListener('change', loadList)
+  priorityFilter.addEventListener('change', loadList)
   sentRefreshBtn.addEventListener('click', loadSent)
 
   backListBtn.addEventListener('click', () => {
@@ -905,21 +1194,21 @@
     const to = toInput.value
     if (!from || !to) return
     syncBtn.disabled = true
-    log.textContent = '正在导入...'
+    log.textContent = t('importing')
     try {
       const params = new URLSearchParams({ from, to, t: Date.now().toString() })
       const data = await fetchJson(`/api/sync?${params.toString()}`)
       if (data.skipped) {
-        log.textContent = `已跳过：该范围之前导入过（${data.email}，${data.from} ~ ${data.to}）。已导入总数：${data.importedCount}`
+        log.textContent = t('skipped_import', {email: data.email, from: data.from, to: data.to, importedCount: data.importedCount})
       } else {
-        log.textContent = `导入完成：为 ${data.email} 处理 ${data.processed} 封邮件（${data.from} ~ ${data.to}）。已导入总数：${data.importedCount}`
+        log.textContent = t('import_complete', {email: data.email, processed: data.processed, from: data.from, to: data.to, importedCount: data.importedCount})
       }
       await refreshProfile()
       showManager()
       showList()
       await loadList()
     } catch (err) {
-      log.textContent = `错误：${err.message || err}`
+      log.textContent = t('error_prefix', {msg: err.message || err})
     } finally {
       syncBtn.disabled = false
     }
@@ -931,23 +1220,23 @@
     const subject = composeSubject.value.trim()
     const body = composeBody.value
     if (!to || !subject) {
-      log.textContent = '请填写收件人和主题'
+      log.textContent = t('fill_required')
       return
     }
     try {
-      log.textContent = '正在发送...'
+      log.textContent = t('sending')
       const payload = { to, subject, text: body }
       await fetchJson('/api/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      log.textContent = '发送成功'
+      log.textContent = t('send_success')
       composeBody.value = ''
       currentDraftId = null
       switchView('sent')
     } catch (err) {
-      log.textContent = `发送失败：${err.message || err}`
+      log.textContent = t('send_fail', {msg: err.message || err})
     }
   })
 
@@ -966,7 +1255,7 @@
     const to = composeTo.value.trim()
     const subject = composeSubject.value.trim()
     if (!to || !subject) {
-      alert('请填写收件人和主题后再保存草稿。')
+      alert(t('fill_required_draft'))
       return
     }
     const payload = {
@@ -982,7 +1271,7 @@
     })
     currentDraftId = data.id
     await loadDrafts()
-    alert('草稿已保存。')
+    alert(t('draft_saved'))
   })
 
   replyBtn.addEventListener('click', () => {
@@ -990,10 +1279,10 @@
     const from = currentMessage.from_email || ''
     const subject = currentMessage.subject || ''
     const bodyText = currentMessage.body_text || currentMessage.snippet || ''
-    const replySubject = subject.toLowerCase().startsWith('re:') ? subject : `Re: ${subject}`
+    const replySubject = subject.toLowerCase().startsWith('re:') ? subject : t('reply_prefix') + subject
     composeTo.value = from
     composeSubject.value = replySubject
-    composeBody.value = `\n\n--- 原邮件 ---\n${bodyText}`
+    composeBody.value = t('original_mail') + bodyText
     switchView('compose')
   })
 
@@ -1085,17 +1374,17 @@
   const loadAgentConfig = async () => {
     try {
       const data = await fetchJson('/api/agent/config')
-      agentStatus.textContent = data.hasApiKey ? '已配置' : '未配置'
-      agentHint.textContent = data.hasApiKey ? '可以开始对话。' : '请先配置 LLM API Key。'
+      agentStatus.textContent = data.hasApiKey ? t('agent_configured') : t('agent_not_configured')
+      agentHint.textContent = data.hasApiKey ? t('agent_ready') : t('agent_need_config')
       agentApiKey.value = ''
-      agentApiKey.placeholder = data.apiKeyMasked || '未配置'
+      agentApiKey.placeholder = data.apiKeyMasked || t('agent_not_configured')
       agentBaseUrl.value = data.baseUrl || ''
       agentModel.value = data.model || 'gemini-3'
       agentPrimaryEmail.value = data.primaryEmail || ''
       agentSystemPrompt.value = data.systemPrompt || ''
       chatSend.disabled = !data.hasApiKey
     } catch (err) {
-      agentStatus.textContent = '配置加载失败'
+      agentStatus.textContent = t('config_load_fail')
       chatSend.disabled = true
     }
   }
@@ -1115,13 +1404,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      agentStatus.textContent = data.hasApiKey ? '已配置' : '未配置'
-      agentHint.textContent = data.hasApiKey ? '可以开始对话。' : '请先配置 LLM API Key。'
+      agentStatus.textContent = data.hasApiKey ? t('agent_configured') : t('agent_not_configured')
+      agentHint.textContent = data.hasApiKey ? t('agent_ready') : t('agent_need_config')
       agentApiKey.value = ''
-      agentApiKey.placeholder = data.apiKeyMasked || '未配置'
+      agentApiKey.placeholder = data.apiKeyMasked || t('agent_not_configured')
       chatSend.disabled = !data.hasApiKey
     } catch (err) {
-      agentStatus.textContent = '保存失败'
+      agentStatus.textContent = t('config_save_fail')
     }
   }
 
@@ -1138,12 +1427,13 @@
         message: prompt,
         model: agentModel.value.trim() || undefined,
         sessionId: currentAgentSessionId || undefined,
+        currentEmailId: currentMessage?.id || undefined,
       }),
     })
 
     if (!res.ok) {
       const text = await res.text()
-      appendAgentMessage('agent', `错误：${text}`)
+      appendAgentMessage('agent', t('error_prefix', {msg: text}))
       return
     }
 
@@ -1165,13 +1455,13 @@
       const text = stripAnsi(String(raw || '')).trim()
       if (!text) return
       if (text.includes('approve-scripts') || text.includes('better-sqlite3')) {
-        addHintOnce('MCP 依赖需要执行 `deno approve-scripts`，或改用 Node + tsx 启动 MCP。')
+        addHintOnce(t('hint_mcp_approve'))
       }
       if (text.includes('Failed to connect to MCP server') || text.includes('Connection closed')) {
-        addHintOnce('MCP 未能启动。请确认 `npm install` 已完成且 `gmail.sqlite` 存在。')
+        addHintOnce(t('hint_mcp_connect_fail'))
       }
       if (text.includes('node_modules/.bin/tsx') || text.includes('ENOENT')) {
-        addHintOnce('本地依赖可能未安装完成，请先运行 `npm install`。')
+        addHintOnce(t('hint_install_deps'))
       }
     }
 
@@ -1205,7 +1495,7 @@
             setCurrentAgentSession(parsed.sessionId)
           } else if (parsed.type === 'error') {
             maybeAddHint(parsed.error || parsed.message)
-            output += `错误：${parsed.error || parsed.message}\n`
+            output += t('error_prefix', {msg: parsed.error || parsed.message}) + '\n'
           } else if (parsed.type === 'stderr' || eventName === 'stderr') {
             maybeAddHint(parsed.message || payload)
             output += `stderr: ${parsed.message || payload}\n`
@@ -1275,11 +1565,11 @@
     if (searchThread.value.trim()) params.set('thread_id', searchThread.value.trim())
     if (searchMessage.value.trim()) params.set('message_id', searchMessage.value.trim())
     if (!Array.from(params.keys()).length) {
-      alert('请至少输入一个搜索条件。')
+      alert(t('search_no_criteria'))
       return
     }
     try {
-      mailList.textContent = '搜索中...'
+      mailList.textContent = t('search_loading')
       const data = await fetchJson(`/api/search?${params.toString()}`)
       renderList(data.messages || [])
       showList()
@@ -1306,7 +1596,7 @@
         const data = await fetchJson(`/api/sent?${params.toString()}`)
         const items = (data.messages || []).map((m) => ({
           ...m,
-          from_email: m.to_email ? `To: ${m.to_email}` : '已发送',
+          from_email: m.to_email ? `To: ${m.to_email}` : t('sent'),
           is_read: 1,
         }))
         sentHasNext = Boolean(data.nextPageToken)
@@ -1314,7 +1604,7 @@
           sentPageTokens[sentPage] = data.nextPageToken
         }
         renderList(items)
-        pageIndicator.textContent = `第 ${sentPage} 页`
+        pageIndicator.textContent = t('page_num', {page: sentPage})
         pagePrev.disabled = sentPage <= 1
         pageNext.disabled = !sentHasNext
       } catch (err) {
@@ -1332,13 +1622,14 @@
       const params = new URLSearchParams({
         order: orderSelect.value,
         read: readFilter.value,
+        priority: priorityFilter.value,
         limit: String(inboxLimit),
         offset: String(inboxOffset),
         t: Date.now().toString(),
       })
       const data = await fetchJson(`/api/messages?${params.toString()}`)
       renderList(data.messages || [])
-      pageIndicator.textContent = `第 ${inboxPage} 页`
+      pageIndicator.textContent = t('page_num', {page: inboxPage})
       pagePrev.disabled = inboxPage <= 1
       pageNext.disabled = (data.messages || []).length < inboxLimit
     } catch (err) {
@@ -1364,7 +1655,7 @@
         const data = await fetchJson(`/api/sent?${params.toString()}`)
         const items = (data.messages || []).map((m) => ({
           ...m,
-          from_email: m.to_email ? `To: ${m.to_email}` : '已发送',
+          from_email: m.to_email ? `To: ${m.to_email}` : t('sent'),
           is_read: 1,
         }))
         sentPage += 1
@@ -1373,7 +1664,7 @@
           sentPageTokens[sentPage] = data.nextPageToken
         }
         renderList(items)
-        pageIndicator.textContent = `第 ${sentPage} 页`
+        pageIndicator.textContent = t('page_num', {page: sentPage})
         pagePrev.disabled = sentPage <= 1
         pageNext.disabled = !sentHasNext
       } catch (err) {
@@ -1390,6 +1681,7 @@
       const params = new URLSearchParams({
         order: orderSelect.value,
         read: readFilter.value,
+        priority: priorityFilter.value,
         limit: String(inboxLimit),
         offset: String(inboxOffset),
         t: Date.now().toString(),
@@ -1397,7 +1689,7 @@
       const data = await fetchJson(`/api/messages?${params.toString()}`)
       const items = data.messages || []
       renderList(items)
-      pageIndicator.textContent = `第 ${inboxPage} 页`
+      pageIndicator.textContent = t('page_num', {page: inboxPage})
       pagePrev.disabled = inboxPage <= 1
       pageNext.disabled = items.length < inboxLimit
     } catch (err) {
@@ -1406,12 +1698,26 @@
     loadingList = false
   })
 
+  // 将 internalDate（毫秒时间戳）转换为美西时间可读格式
+  function formatInternalDate(internalDate) {
+    if (!internalDate) return t('unknown_date');
+    const date = new Date(Number(internalDate));
+    return date.toLocaleString('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   function renderList(messages, append = false) {
     if (!append) {
       mailList.innerHTML = ''
     }
     if (!messages.length) {
-      mailList.textContent = '没有邮件（或尚未导入）。'
+      mailList.textContent = t('no_mail')
       return
     }
     messages.forEach((msg) => {
@@ -1422,14 +1728,34 @@
 
       const subject = document.createElement('div')
       subject.className = 'mail-subject'
-      subject.textContent = msg.subject || '(无主题)'
+      subject.textContent = msg.subject || t('no_subject')
+
+      // 添加优先级标识
+      const priorityBadge = document.createElement('span')
+      priorityBadge.style.cssText = 'margin-left:8px; font-size:0.75rem; padding:2px 8px; border-radius:12px; font-weight:600;'
+
+      if (msg.priority === 2) {
+        priorityBadge.textContent = t('high_priority')
+        priorityBadge.style.background = 'rgba(255,59,48,0.15)'
+        priorityBadge.style.color = '#ff3b30'
+      } else if (msg.priority === 1) {
+        priorityBadge.textContent = t('low_priority')
+        priorityBadge.style.background = 'rgba(0,0,0,0.05)'
+        priorityBadge.style.color = '#666'
+      } else if (msg.priority === 0) {
+        priorityBadge.textContent = t('not_analyzed')
+        priorityBadge.style.background = 'rgba(255,204,0,0.12)'
+        priorityBadge.style.color = '#cc8800'
+      }
+
+      subject.appendChild(priorityBadge)
 
       const meta = document.createElement('div')
       meta.className = 'mail-meta'
       const from = document.createElement('span')
-      from.textContent = msg.from_email || '未知发件人'
+      from.textContent = msg.from_email || t('unknown_sender')
       const date = document.createElement('span')
-      date.textContent = msg.date || '未知日期'
+      date.textContent = formatInternalDate(msg.internal_date)
       meta.append(from, date)
 
       const snippet = document.createElement('div')
@@ -1446,7 +1772,7 @@
       checkbox.checked = Boolean(msg.is_read)
       checkbox.disabled = true
       const label = document.createElement('span')
-      label.textContent = msg.is_read ? ' 已读' : ' 未读'
+      label.textContent = msg.is_read ? ' ' + t('read') : ' ' + t('unread')
       label.style.marginLeft = '4px'
       label.style.fontSize = '0.8rem'
       readStatus.append(checkbox, label)
@@ -1461,12 +1787,13 @@
     if (loadingList) return
     loadingList = true
     try {
-      mailList.textContent = '加载中...'
+      mailList.textContent = t('loading')
       inboxPage = 1
       inboxOffset = 0
       const params = new URLSearchParams({
         order: orderSelect.value,
         read: readFilter.value,
+        priority: priorityFilter.value,
         limit: String(inboxLimit),
         offset: String(inboxOffset),
         t: Date.now().toString(),
@@ -1474,11 +1801,11 @@
       const data = await fetchJson(`/api/messages?${params.toString()}`)
       renderList(data.messages || [])
       inboxOffset += (data.messages || []).length
-      pageIndicator.textContent = `第 ${inboxPage} 页`
+      pageIndicator.textContent = t('page_num', {page: inboxPage})
       pagePrev.disabled = inboxPage <= 1
       pageNext.disabled = (data.messages || []).length < inboxLimit
     } catch (err) {
-      const msg = `错误：${err.message || err}`
+      const msg = t('error_prefix', {msg: err.message || err})
       mailList.textContent = msg
       log.textContent = msg
     }
@@ -1489,7 +1816,7 @@
     if (loadingList) return
     loadingList = true
     try {
-      mailList.textContent = '加载中...'
+      mailList.textContent = t('loading')
       sentPage = 1
       sentPageTokens = [null]
       const params = new URLSearchParams({
@@ -1501,7 +1828,7 @@
       const data = await fetchJson(`/api/sent?${params.toString()}`)
       const items = (data.messages || []).map((m) => ({
         ...m,
-        from_email: m.to_email ? `To: ${m.to_email}` : '已发送',
+        from_email: m.to_email ? `To: ${m.to_email}` : t('sent'),
         is_read: 1,
       }))
       sentHasNext = Boolean(data.nextPageToken)
@@ -1509,11 +1836,11 @@
         sentPageTokens[1] = data.nextPageToken
       }
       renderList(items)
-      pageIndicator.textContent = `第 ${sentPage} 页`
+      pageIndicator.textContent = t('page_num', {page: sentPage})
       pagePrev.disabled = sentPage <= 1
       pageNext.disabled = !sentHasNext
     } catch (err) {
-      const msg = `错误：${err.message || err}`
+      const msg = t('error_prefix', {msg: err.message || err})
       mailList.textContent = msg
       log.textContent = msg
     }
@@ -1528,7 +1855,7 @@
   const loadDetail = async (id) => {
     activeId = id
     try {
-      detailSubject.textContent = '加载中...'
+      detailSubject.textContent = t('loading')
       detailMeta.textContent = ''
       detailBody.textContent = ''
       disableReply()
@@ -1536,8 +1863,8 @@
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '加载失败')
 
-      detailSubject.textContent = data.subject || '(无主题)'
-      detailMeta.textContent = `${data.from_email || '未知发件人'} · ${data.date || ''} · ${data.is_read ? '已读' : '未读'}`
+      detailSubject.textContent = data.subject || t('no_subject')
+      detailMeta.textContent = `${data.from_email || t('unknown_sender')} · ${formatInternalDate(data.internal_date)} · ${data.is_read ? t('read') : t('unread')}`
 
       detailBody.innerHTML = ''
       if (data.body_html) {
@@ -1561,7 +1888,7 @@
       replyBtn.disabled = false
       showDetail()
     } catch (err) {
-      detailSubject.textContent = '错误'
+      detailSubject.textContent = t('error')
       detailBody.textContent = err.message || err
     }
   }

@@ -25,6 +25,7 @@ export async function ensureDatabase(): Promise<DB> {
       body_text TEXT,
       body_html TEXT,
       raw TEXT,
+      priority INTEGER DEFAULT 0,
       PRIMARY KEY (account_email, message_id)
     );
   `)
@@ -32,6 +33,12 @@ export async function ensureDatabase(): Promise<DB> {
   const columns: Array<{ name: string }> = await db.all(`PRAGMA table_info(gmail_messages);`)
   const hasAccountEmail = columns.some((col) => col.name === 'account_email')
   const hasMessageId = columns.some((col) => col.name === 'message_id')
+  const hasPriority = columns.some((col) => col.name === 'priority')
+
+  // 添加 priority 字段迁移（如果表已存在但缺少该字段）
+  if (hasAccountEmail && hasMessageId && !hasPriority) {
+    await db.exec(`ALTER TABLE gmail_messages ADD COLUMN priority INTEGER DEFAULT 0;`)
+  }
 
   if (!hasAccountEmail || !hasMessageId) {
     const legacyHasIsRead = columns.some((col) => col.name === 'is_read')
@@ -50,6 +57,7 @@ export async function ensureDatabase(): Promise<DB> {
         body_text TEXT,
         body_html TEXT,
         raw TEXT,
+        priority INTEGER DEFAULT 0,
         PRIMARY KEY (account_email, message_id)
       );
     `)
@@ -69,7 +77,8 @@ export async function ensureDatabase(): Promise<DB> {
         is_read,
         body_text,
         body_html,
-        raw
+        raw,
+        priority
       )
       SELECT
         '' as account_email,
@@ -84,7 +93,8 @@ export async function ensureDatabase(): Promise<DB> {
         ${isReadExpr},
         body_text,
         body_html,
-        raw
+        raw,
+        0 as priority
       FROM gmail_messages;
     `)
 

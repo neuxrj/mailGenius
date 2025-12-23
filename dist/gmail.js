@@ -24,9 +24,11 @@ exports.autoSyncEnabled = autoSyncEnabled;
 const node_fs_1 = __importDefault(require("node:fs"));
 const googleapis_1 = require("googleapis");
 const config_1 = require("./config");
+const logDb_1 = require("./logDb");
 const logger_1 = require("./logger");
 let cachedAccountEmail = null;
 let lastAuthError = null;
+const LOG_SOURCE = 'src/gmail.ts';
 function getCachedAccountEmail() {
     return cachedAccountEmail;
 }
@@ -46,7 +48,9 @@ function ensureAccessToken(authClient) {
         try {
             const token = yield authClient.getAccessToken();
             lastAuthError = null;
-            return Boolean(token === null || token === void 0 ? void 0 : token.token);
+            const ok = Boolean(token === null || token === void 0 ? void 0 : token.token);
+            void (0, logDb_1.logInteraction)(LOG_SOURCE, `ensureAccessToken ok=${ok}`);
+            return ok;
         }
         catch (err) {
             lastAuthError = (_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : String(err);
@@ -101,6 +105,7 @@ function getAccountEmail(auth) {
         if (!email)
             throw new Error('Unable to determine account email');
         cachedAccountEmail = email;
+        void (0, logDb_1.logInteraction)(LOG_SOURCE, `getAccountEmail ok email=${email}`);
         return email;
     });
 }
@@ -127,6 +132,7 @@ function handleOauthCallback(oauthClient, code) {
         const mergedTokens = Object.assign(Object.assign({}, tokenResponse.tokens), { refresh_token: (_b = tokenResponse.tokens.refresh_token) !== null && _b !== void 0 ? _b : existingRefreshToken });
         oauthClient.setCredentials(mergedTokens);
         clearCachedAccount();
+        void (0, logDb_1.logInteraction)(LOG_SOURCE, `oauth callback tokens access=${Boolean(mergedTokens.access_token)} refresh=${Boolean(mergedTokens.refresh_token)}`);
         try {
             yield getAccountEmail(oauthClient);
         }

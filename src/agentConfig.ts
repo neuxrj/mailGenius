@@ -21,6 +21,7 @@ export type AgentConfig = {
   model?: string
   systemPrompt?: string
   primaryEmail?: string
+  priorityAnalysisPrompt?: string
   mcpServers?: McpServerConfig[]
 }
 
@@ -31,6 +32,7 @@ const DEFAULT_CONFIG: AgentConfig = {
   apiKey: '',
   systemPrompt: '',
   primaryEmail: '',
+  priorityAnalysisPrompt: '',
   mcpServers: [],
 }
 

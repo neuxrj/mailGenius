@@ -9,4 +9,10 @@ yarn-error.log*
 .pnp.js
 
 .vscode/*
+
+# SQLite databases
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
 credentials.json

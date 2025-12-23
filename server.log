@@ -1,38 +1,115 @@
-{"ts":"2025-12-22T10:18:44.334Z","level":"warn","message":"Redirect URI not in credentials.json; using it anyway","meta":{"chosenRedirect":"http://localhost:3000/auth/callback"}}
-{"ts":"2025-12-22T10:18:44.403Z","level":"info","message":"server started","meta":{"port":3000,"redirectUri":"http://localhost:3000/auth/callback","autoSync":0}}
-{"ts":"2025-12-22T10:18:46.700Z","level":"info","message":"http","meta":{"method":"GET","path":"/","status":304,"ms":2}}
-{"ts":"2025-12-22T10:18:46.735Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/config","status":200,"ms":6}}
-{"ts":"2025-12-22T10:18:46.738Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/auto-sync","status":200,"ms":1}}
-{"ts":"2025-12-22T10:18:46.740Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":4}}
-{"ts":"2025-12-22T10:18:46.743Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/profile","status":200,"ms":16}}
-{"ts":"2025-12-22T10:18:46.790Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/fbf30d4d-da3c-47f1-a801-411b5f950a80/messages","status":200,"ms":10}}
-{"ts":"2025-12-22T10:18:46.793Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":11}}
-{"ts":"2025-12-22T10:18:47.046Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":262}}
-{"ts":"2025-12-22T10:19:03.938Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":213}}
-{"ts":"2025-12-22T10:19:51.514Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":21}}
-{"ts":"2025-12-22T10:19:52.927Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/sent","status":200,"ms":1431}}
-{"ts":"2025-12-22T10:19:55.210Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages/19b2ab64f2aa1143","status":200,"ms":4}}
-{"ts":"2025-12-22T10:19:59.989Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages/19b2aa0caf82e70a","status":200,"ms":4}}
-{"ts":"2025-12-22T10:20:05.361Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages/19b2ab64f2aa1143","status":200,"ms":7}}
-{"ts":"2025-12-22T10:20:06.885Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages/19b34bc6c8cd3132","status":200,"ms":3}}
-{"ts":"2025-12-22T10:20:15.649Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages/19b102b9fb6f45f2","status":200,"ms":5}}
-{"ts":"2025-12-22T10:20:18.289Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":2}}
-{"ts":"2025-12-22T10:20:18.474Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":186}}
-{"ts":"2025-12-22T10:26:43.248Z","level":"info","message":"http","meta":{"method":"GET","path":"/","status":200,"ms":3}}
-{"ts":"2025-12-22T10:26:43.276Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/config","status":200,"ms":5}}
-{"ts":"2025-12-22T10:26:43.277Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/auto-sync","status":200,"ms":0}}
-{"ts":"2025-12-22T10:26:43.279Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":3}}
-{"ts":"2025-12-22T10:26:43.284Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/profile","status":200,"ms":13}}
-{"ts":"2025-12-22T10:26:43.338Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/fbf30d4d-da3c-47f1-a801-411b5f950a80/messages","status":200,"ms":2}}
-{"ts":"2025-12-22T10:26:43.339Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":3}}
-{"ts":"2025-12-22T10:26:43.619Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":282}}
-{"ts":"2025-12-22T10:26:50.285Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":21}}
-{"ts":"2025-12-22T10:32:48.038Z","level":"info","message":"http","meta":{"method":"GET","path":"/","status":200,"ms":8}}
-{"ts":"2025-12-22T10:32:48.087Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/config","status":200,"ms":3}}
-{"ts":"2025-12-22T10:32:48.089Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/auto-sync","status":200,"ms":1}}
-{"ts":"2025-12-22T10:32:48.091Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":4}}
-{"ts":"2025-12-22T10:32:48.102Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/profile","status":200,"ms":19}}
-{"ts":"2025-12-22T10:32:48.158Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/fbf30d4d-da3c-47f1-a801-411b5f950a80/messages","status":200,"ms":3}}
-{"ts":"2025-12-22T10:32:48.159Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":3}}
-{"ts":"2025-12-22T10:32:48.487Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":331}}
-{"ts":"2025-12-22T10:32:53.327Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":21}}
+{"ts":"2025-12-23T06:27:38.589Z","level":"warn","message":"Redirect URI not in credentials.json; using it anyway","meta":{"chosenRedirect":"http://localhost:3000/auth/callback"}}
+{"ts":"2025-12-23T06:27:38.617Z","level":"info","message":"server started","meta":{"port":3000,"redirectUri":"http://localhost:3000/auth/callback","autoSync":0}}
+{"ts":"2025-12-23T06:27:50.172Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/status","status":200,"ms":1}}
+{"ts":"2025-12-23T06:29:35.557Z","level":"info","message":"http","meta":{"method":"GET","path":"/","status":200,"ms":12}}
+{"ts":"2025-12-23T06:29:35.602Z","level":"info","message":"http","meta":{"method":"GET","path":"/.well-known/appspecific/com.chrome.devtools.json","status":404,"ms":18}}
+{"ts":"2025-12-23T06:29:35.607Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/config","status":200,"ms":2}}
+{"ts":"2025-12-23T06:29:35.616Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/auto-sync","status":200,"ms":6}}
+{"ts":"2025-12-23T06:29:35.620Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/profile","status":200,"ms":17}}
+{"ts":"2025-12-23T06:29:35.620Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":12}}
+{"ts":"2025-12-23T06:29:35.700Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/41c47864-5584-43d4-b976-d07817d0853c/messages","status":200,"ms":9}}
+{"ts":"2025-12-23T06:29:35.706Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":17}}
+{"ts":"2025-12-23T06:29:35.708Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":18}}
+{"ts":"2025-12-23T06:29:42.781Z","level":"warn","message":"mark read failed","meta":{"error":"Invalid id value","id":"rbz5u0816ogmji5ecve"}}
+{"ts":"2025-12-23T06:29:42.783Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages/rbz5u0816ogmji5ecve","status":200,"ms":1152}}
+{"ts":"2025-12-23T06:29:46.981Z","level":"info","message":"http","meta":{"method":"POST","path":"/api/agent/sessions","status":200,"ms":2}}
+{"ts":"2025-12-23T06:29:46.985Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":1}}
+{"ts":"2025-12-23T06:29:46.992Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/1f4375e2-e6a8-4825-83fe-8d11afede10f/messages","status":200,"ms":0}}
+{"ts":"2025-12-23T06:29:47.002Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/1f4375e2-e6a8-4825-83fe-8d11afede10f/messages","status":200,"ms":1}}
+{"ts":"2025-12-23T06:30:00.959Z","level":"info","message":"agent chat spawn","meta":{"runnerPath":"/Users/tony/WebstormProjects/MailAgent/agent/zypher_runner.ts","model":"gpt-5.1"}}
+{"ts":"2025-12-23T06:30:10.914Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":3}}
+{"ts":"2025-12-23T06:30:12.515Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts/3d6f262e-c096-4444-bec8-ace693610da0","status":200,"ms":3}}
+{"ts":"2025-12-23T06:30:12.522Z","level":"info","message":"http","meta":{"method":"DELETE","path":"/api/drafts/3d6f262e-c096-4444-bec8-ace693610da0","status":200,"ms":3}}
+{"ts":"2025-12-23T06:30:12.527Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":3}}
+{"ts":"2025-12-23T06:37:28.732Z","level":"info","message":"http","meta":{"method":"POST","path":"/api/auto-sync","status":200,"ms":1}}
+{"ts":"2025-12-23T06:37:31.715Z","level":"info","message":"http","meta":{"method":"POST","path":"/api/auto-sync","status":200,"ms":0}}
+{"ts":"2025-12-23T06:37:31.795Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/profile","status":200,"ms":4}}
+{"ts":"2025-12-23T06:37:31.798Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":2}}
+{"ts":"2025-12-23T06:37:31.801Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":1}}
+{"ts":"2025-12-23T06:37:34.253Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":4}}
+{"ts":"2025-12-23T06:37:34.254Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":3}}
+{"ts":"2025-12-23T06:37:35.196Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":1}}
+{"ts":"2025-12-23T06:37:38.815Z","level":"info","message":"http","meta":{"method":"POST","path":"/api/agent/sessions","status":200,"ms":5}}
+{"ts":"2025-12-23T06:37:38.820Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":2}}
+{"ts":"2025-12-23T06:37:38.825Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/c00111db-22ae-4fa8-8e5b-ff31b8fbc89a/messages","status":200,"ms":1}}
+{"ts":"2025-12-23T06:37:38.832Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/c00111db-22ae-4fa8-8e5b-ff31b8fbc89a/messages","status":200,"ms":1}}
+{"ts":"2025-12-23T06:38:31.719Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766471851715,"toMs":1766471911718}}
+{"ts":"2025-12-23T06:38:31.889Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766471851715,"toMs":1766471911718,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:39:31.718Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766471911718,"toMs":1766471971718}}
+{"ts":"2025-12-23T06:39:31.881Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766471911718,"toMs":1766471971718,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:39:37.604Z","level":"info","message":"http","meta":{"method":"GET","path":"/","status":304,"ms":1}}
+{"ts":"2025-12-23T06:39:37.607Z","level":"warn","message":"agent chat response closed early"}
+{"ts":"2025-12-23T06:39:37.631Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/config","status":200,"ms":1}}
+{"ts":"2025-12-23T06:39:37.632Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/auto-sync","status":200,"ms":0}}
+{"ts":"2025-12-23T06:39:37.633Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":1}}
+{"ts":"2025-12-23T06:39:37.634Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/profile","status":200,"ms":7}}
+{"ts":"2025-12-23T06:39:37.640Z","level":"info","message":"agent chat closed","meta":{"code":null,"signal":"SIGTERM"}}
+{"ts":"2025-12-23T06:39:37.687Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/c00111db-22ae-4fa8-8e5b-ff31b8fbc89a/messages","status":200,"ms":1}}
+{"ts":"2025-12-23T06:39:37.688Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":1}}
+{"ts":"2025-12-23T06:39:37.690Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":3}}
+{"ts":"2025-12-23T06:39:40.400Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":6}}
+{"ts":"2025-12-23T06:40:31.720Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766471971718,"toMs":1766472031720}}
+{"ts":"2025-12-23T06:40:31.860Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766471971718,"toMs":1766472031720,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:41:31.720Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472031720,"toMs":1766472091719}}
+{"ts":"2025-12-23T06:41:31.869Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472031720,"toMs":1766472091719,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:42:31.720Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472091719,"toMs":1766472151720}}
+{"ts":"2025-12-23T06:42:31.861Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472091719,"toMs":1766472151720,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:43:31.723Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472151720,"toMs":1766472211723}}
+{"ts":"2025-12-23T06:43:31.863Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472151720,"toMs":1766472211723,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:44:31.742Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472211723,"toMs":1766472271740}}
+{"ts":"2025-12-23T06:44:31.928Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472211723,"toMs":1766472271740,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:45:31.731Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472271740,"toMs":1766472331731}}
+{"ts":"2025-12-23T06:45:31.891Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472271740,"toMs":1766472331731,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:46:31.733Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472331731,"toMs":1766472391733}}
+{"ts":"2025-12-23T06:46:31.871Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472331731,"toMs":1766472391733,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:47:31.734Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472391733,"toMs":1766472451734}}
+{"ts":"2025-12-23T06:47:31.898Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472391733,"toMs":1766472451734,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:48:31.737Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472451734,"toMs":1766472511737}}
+{"ts":"2025-12-23T06:48:31.899Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472451734,"toMs":1766472511737,"processed":0,"importedCount":10}}
+{"ts":"2025-12-23T06:49:31.740Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472511737,"toMs":1766472571740}}
+{"ts":"2025-12-23T06:49:31.988Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472511737,"toMs":1766472571740,"processed":1,"importedCount":11}}
+{"ts":"2025-12-23T06:49:31.989Z","level":"info","message":"Starting email priority analysis","meta":{"accountEmail":"xrjall@gmail.com","messageCount":1}}
+{"ts":"2025-12-23T06:49:31.991Z","level":"info","message":"Spawning Zypher agent for priority analysis","meta":{"sessionId":"b3915892-e4e7-47d9-87c0-05afb57c84a8","messageCount":1,"runnerPath":"/Users/tony/WebstormProjects/MailAgent/agent/zypher_runner.ts"}}
+{"ts":"2025-12-23T06:50:31.742Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472571740,"toMs":1766472631741}}
+{"ts":"2025-12-23T06:50:31.892Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472571740,"toMs":1766472631741,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:51:31.743Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472631741,"toMs":1766472691743}}
+{"ts":"2025-12-23T06:51:31.890Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472631741,"toMs":1766472691743,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:52:31.744Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472691743,"toMs":1766472751744}}
+{"ts":"2025-12-23T06:52:31.878Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472691743,"toMs":1766472751744,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:53:31.745Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472751744,"toMs":1766472811745}}
+{"ts":"2025-12-23T06:53:31.888Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472751744,"toMs":1766472811745,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:54:31.747Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472811745,"toMs":1766472871746}}
+{"ts":"2025-12-23T06:54:31.906Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472811745,"toMs":1766472871746,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:55:31.748Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472871746,"toMs":1766472931747}}
+{"ts":"2025-12-23T06:55:31.891Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472871746,"toMs":1766472931747,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:56:31.750Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472931747,"toMs":1766472991750}}
+{"ts":"2025-12-23T06:56:31.908Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472931747,"toMs":1766472991750,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:57:31.751Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472991750,"toMs":1766473051751}}
+{"ts":"2025-12-23T06:57:31.911Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766472991750,"toMs":1766473051751,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:58:31.764Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473051751,"toMs":1766473111764}}
+{"ts":"2025-12-23T06:58:31.910Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473051751,"toMs":1766473111764,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T06:59:31.767Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473111764,"toMs":1766473171767}}
+{"ts":"2025-12-23T06:59:31.914Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473111764,"toMs":1766473171767,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T07:00:31.768Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473171767,"toMs":1766473231768}}
+{"ts":"2025-12-23T07:00:31.944Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473171767,"toMs":1766473231768,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T07:01:31.769Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473231768,"toMs":1766473291769}}
+{"ts":"2025-12-23T07:01:31.958Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473231768,"toMs":1766473291769,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T07:02:31.769Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473291769,"toMs":1766473351769}}
+{"ts":"2025-12-23T07:02:31.904Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473291769,"toMs":1766473351769,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T07:03:05.002Z","level":"info","message":"http","meta":{"method":"GET","path":"/","status":200,"ms":2}}
+{"ts":"2025-12-23T07:03:31.770Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473351769,"toMs":1766473411770}}
+{"ts":"2025-12-23T07:03:31.923Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473351769,"toMs":1766473411770,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T07:04:31.773Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473411770,"toMs":1766473471773}}
+{"ts":"2025-12-23T07:04:31.909Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473411770,"toMs":1766473471773,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T07:05:31.773Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473471773,"toMs":1766473531773}}
+{"ts":"2025-12-23T07:05:31.911Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473471773,"toMs":1766473531773,"processed":0,"importedCount":11}}
+{"ts":"2025-12-23T07:05:40.618Z","level":"info","message":"http","meta":{"method":"GET","path":"/","status":200,"ms":3}}
+{"ts":"2025-12-23T07:05:40.657Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/config","status":200,"ms":1}}
+{"ts":"2025-12-23T07:05:40.659Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/auto-sync","status":200,"ms":1}}
+{"ts":"2025-12-23T07:05:40.660Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/profile","status":200,"ms":4}}
+{"ts":"2025-12-23T07:05:40.661Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions","status":200,"ms":3}}
+{"ts":"2025-12-23T07:05:40.710Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/agent/sessions/c00111db-22ae-4fa8-8e5b-ff31b8fbc89a/messages","status":200,"ms":1}}
+{"ts":"2025-12-23T07:05:40.711Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/drafts","status":200,"ms":2}}
+{"ts":"2025-12-23T07:05:40.714Z","level":"info","message":"http","meta":{"method":"GET","path":"/api/messages","status":200,"ms":5}}
+{"ts":"2025-12-23T07:06:31.776Z","level":"info","message":"auto-sync start","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473531773,"toMs":1766473591776}}
+{"ts":"2025-12-23T07:06:31.933Z","level":"info","message":"auto-sync finished","meta":{"accountEmail":"xrjall@gmail.com","fromMs":1766473531773,"toMs":1766473591776,"processed":0,"importedCount":11}}

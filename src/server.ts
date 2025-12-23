@@ -32,6 +32,7 @@ import {
   listChatSessions,
 } from './chatDb'
 import { logInteraction } from './logDb'
+import { analyzeEmailPriority } from './agent'
 
 let autoSyncTimer: NodeJS.Timeout | null = null
 let autoSyncRunning = false
@@ -72,7 +73,7 @@ async function runAutoSync(oauthClient: any) {
           INSERT INTO gmail_import_runs (account_email, from_date, to_date, finished_at, processed_count)
           VALUES (?, ?, ?, ?, ?)
         `,
-        [accountEmail, result.from, result.to, Date.now(), result.processedCount],
+        [accountEmail, new Date(fromMs).toISOString().split('T')[0], new Date(now).toISOString().split('T')[0], Date.now(), result.processedCount],
       )
     }
     await db.close()
@@ -88,6 +89,14 @@ async function runAutoSync(oauthClient: any) {
       LOG_SOURCE,
       `auto-sync finished account=${accountEmail} processed=${result.processedCount} fromMs=${fromMs} toMs=${now}`,
     )
+
+    // 触发 Agent 分析新邮件优先级（后台异步执行）
+    if (result.processedCount > 0 && result.newMessageIds && result.newMessageIds.length > 0) {
+      void analyzeEmailPriority(accountEmail, result.newMessageIds).catch(err => {
+        log('warn', 'agent priority analysis failed', { error: err?.message ?? String(err) })
+        void logInteraction(LOG_SOURCE, `agent priority analysis failed error=${err?.message ?? String(err)}`)
+      })
+    }
   } catch (err: any) {
     log('warn', 'auto-sync failed', { error: err?.message ?? String(err) })
     void logInteraction(LOG_SOURCE, `auto-sync failed error=${err?.message ?? String(err)}`)
@@ -249,6 +258,7 @@ export async function startServer() {
       const offset = Math.max(Number(req.query.offset ?? 0), 0)
       const includeSent = req.query.include_sent === '1'
       const readFilter = typeof req.query.read === 'string' ? req.query.read : 'all'
+      const priorityFilter = typeof req.query.priority === 'string' ? req.query.priority : 'all'
 
       const whereClauses: string[] = []
       const params: Array<string | number> = []
@@ -266,12 +276,17 @@ export async function startServer() {
         whereClauses.push('is_read = 0')
       }
 
+      if (priorityFilter === '0' || priorityFilter === '1' || priorityFilter === '2') {
+        whereClauses.push('priority = ?')
+        params.push(Number(priorityFilter))
+      }
+
       const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : ''
       const db = await ensureDatabase()
       await migrateUnknownAccountEmail(db, accountEmail)
       const rows = await db.all(
         `
-        SELECT message_id as id, subject, from_email, date, snippet, internal_date, is_read
+        SELECT message_id as id, subject, from_email, date, snippet, internal_date, is_read, priority
         FROM gmail_messages
         ${whereSql}
         ORDER BY internal_date ${order}
@@ -280,7 +295,7 @@ export async function startServer() {
         [...params, limit, offset],
       )
       await db.close()
-      log('debug', 'api/messages ok', { accountEmail, rows: rows.length, order, limit, offset, readFilter })
+      log('debug', 'api/messages ok', { accountEmail, rows: rows.length, order, limit, offset, readFilter, priorityFilter })
       res.json({ messages: rows, offset, limit })
     } catch (err: any) {
       log('error', 'api/messages failed', { error: err?.message ?? String(err) })
@@ -332,7 +347,7 @@ export async function startServer() {
       await migrateUnknownAccountEmail(db, accountEmail)
       const rows = await db.all(
         `
-        SELECT message_id as id, subject, from_email, date, snippet, internal_date, is_read
+        SELECT message_id as id, subject, from_email, date, snippet, internal_date, is_read, priority
         FROM gmail_messages
         ${whereSql}
         ORDER BY internal_date DESC
@@ -571,7 +586,7 @@ export async function startServer() {
   })
 
   app.post('/api/agent/chat', async (req: Request, res: Response) => {
-    const { message, model, sessionId: sessionIdRaw } = req.body ?? {}
+    const { message, model, sessionId: sessionIdRaw, currentEmailId } = req.body ?? {}
     if (!message || typeof message !== 'string') {
       res.status(400).json({ error: 'Missing message' })
       return
@@ -594,6 +609,45 @@ export async function startServer() {
         : await createChatSession()
     await ensureChatSession(sessionId)
 
+    let messageWithContext = message
+    if (currentEmailId && typeof currentEmailId === 'string') {
+      try {
+        const accountEmail = await getAccountEmail(oauthClient)
+        const db = await ensureDatabase()
+        const emailData = await db.get(
+          `SELECT message_id as id, subject, from_email, to_email, date, snippet
+           FROM gmail_messages
+           WHERE account_email = ? AND message_id = ?`,
+          [accountEmail, currentEmailId]
+        )
+        await db.close()
+
+        if (emailData) {
+          const contextInfo = `<system-context>
+当前用户正在查看以下邮件：
+- 邮件ID: ${emailData.id}
+- 主题: ${emailData.subject || '(无主题)'}
+- 发件人: ${emailData.from_email || '(未知)'}
+- 收件人: ${emailData.to_email || '(未知)'}
+- 日期: ${emailData.date || '(未知)'}
+- 摘要: ${emailData.snippet || '(无摘要)'}
+
+当用户提到"这封邮件"、"回复"、"回复这个"等时，指的是上述邮件。
+</system-context>
+
+`
+          messageWithContext = contextInfo + message
+
+          void logInteraction(
+            LOG_SOURCE,
+            `agent chat with email context emailId=${currentEmailId}`
+          )
+        }
+      } catch (err: any) {
+        log('warn', 'failed to fetch email context', { error: err?.message ?? String(err) })
+      }
+    }
+
     const runnerPath = path.join(process.cwd(), 'agent', 'zypher_runner.ts')
     const args = ['run', '-A', runnerPath, '--config', AGENT_CONFIG_PATH, '--session', sessionId]
     if (typeof model === 'string' && model.trim()) {
@@ -612,7 +666,7 @@ export async function startServer() {
       env: process.env,
     })
 
-    proc.stdin.write(message)
+    proc.stdin.write(messageWithContext)
     proc.stdin.end()
 
     let buffer = ''
@@ -682,7 +736,7 @@ export async function startServer() {
       await migrateUnknownAccountEmail(db, accountEmail)
       const row = await db.get(
         `
-        SELECT message_id as id, subject, from_email, to_email, date, snippet, is_read, body_text, body_html
+        SELECT message_id as id, subject, from_email, to_email, date, snippet, is_read, body_text, body_html, priority
         FROM gmail_messages
         WHERE account_email = ? AND message_id = ?
       `,

@@ -25,11 +25,19 @@ const sync_1 = require("./sync");
 const mailer_1 = require("./mailer");
 const config_1 = require("./config");
 const agentConfig_1 = require("./agentConfig");
+const drafts_1 = require("./drafts");
+const chatDb_1 = require("./chatDb");
+const logDb_1 = require("./logDb");
+const agent_1 = require("./agent");
 let autoSyncTimer = null;
 let autoSyncRunning = false;
+let autoSyncEnabled = config_1.AUTO_SYNC_MINUTES > 0;
+let autoSyncIntervalMinutes = config_1.AUTO_SYNC_MINUTES;
+let autoSyncLastSyncAt = autoSyncEnabled ? Date.now() : null;
+const LOG_SOURCE = 'src/server.ts';
 function runAutoSync(oauthClient) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
+        var _a, _b, _c;
         if (autoSyncRunning)
             return;
         autoSyncRunning = true;
@@ -37,13 +45,19 @@ function runAutoSync(oauthClient) {
             const ok = yield (0, gmail_1.ensureAccessToken)(oauthClient);
             if (!ok) {
                 (0, logger_1.log)('warn', 'auto-sync skipped: not authorized');
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, 'auto-sync skipped: not authorized');
                 autoSyncRunning = false;
                 return;
             }
             const accountEmail = yield (0, gmail_1.getAccountEmail)(oauthClient);
-            const range = (0, sync_1.defaultRange)();
-            (0, logger_1.log)('info', 'auto-sync start', { accountEmail, from: range.from, to: range.to });
-            const result = yield (0, sync_1.syncMessages)(oauthClient, accountEmail, range.from, range.to);
+            const now = Date.now();
+            const fromMs = autoSyncLastSyncAt !== null && autoSyncLastSyncAt !== void 0 ? autoSyncLastSyncAt : now;
+            if (now <= fromMs) {
+                autoSyncRunning = false;
+                return;
+            }
+            (0, logger_1.log)('info', 'auto-sync start', { accountEmail, fromMs, toMs: now });
+            const result = yield (0, sync_1.syncMessagesByTimestamp)(oauthClient, accountEmail, fromMs, now);
             const db = yield (0, db_1.ensureDatabase)();
             yield (0, db_1.migrateUnknownAccountEmail)(db, accountEmail);
             const countRow = yield db.get(`SELECT COUNT(*) as count FROM gmail_messages WHERE account_email = ?`, [accountEmail]);
@@ -51,22 +65,43 @@ function runAutoSync(oauthClient) {
                 yield db.run(`
           INSERT INTO gmail_import_runs (account_email, from_date, to_date, finished_at, processed_count)
           VALUES (?, ?, ?, ?, ?)
-        `, [accountEmail, result.from, result.to, Date.now(), result.processedCount]);
+        `, [accountEmail, new Date(fromMs).toISOString().split('T')[0], new Date(now).toISOString().split('T')[0], Date.now(), result.processedCount]);
             }
             yield db.close();
+            autoSyncLastSyncAt = now;
             (0, logger_1.log)('info', 'auto-sync finished', {
                 accountEmail,
-                from: result.from,
-                to: result.to,
+                fromMs,
+                toMs: now,
                 processed: result.processedCount,
                 importedCount: Number((_a = countRow === null || countRow === void 0 ? void 0 : countRow.count) !== null && _a !== void 0 ? _a : 0),
             });
+            void (0, logDb_1.logInteraction)(LOG_SOURCE, `auto-sync finished account=${accountEmail} processed=${result.processedCount} fromMs=${fromMs} toMs=${now}`);
+            // 触发 Agent 分析新邮件优先级（后台异步执行）
+            if (result.processedCount > 0 && result.newMessageIds && result.newMessageIds.length > 0) {
+                void (0, agent_1.analyzeEmailPriority)(accountEmail, result.newMessageIds).catch(err => {
+                    var _a, _b;
+                    (0, logger_1.log)('warn', 'agent priority analysis failed', { error: (_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : String(err) });
+                    void (0, logDb_1.logInteraction)(LOG_SOURCE, `agent priority analysis failed error=${(_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : String(err)}`);
+                });
+            }
         }
         catch (err) {
             (0, logger_1.log)('warn', 'auto-sync failed', { error: (_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : String(err) });
+            void (0, logDb_1.logInteraction)(LOG_SOURCE, `auto-sync failed error=${(_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : String(err)}`);
         }
         autoSyncRunning = false;
     });
+}
+function scheduleAutoSync(oauthClient) {
+    if (autoSyncTimer) {
+        clearInterval(autoSyncTimer);
+        autoSyncTimer = null;
+    }
+    if (!autoSyncEnabled || autoSyncIntervalMinutes <= 0) {
+        return;
+    }
+    autoSyncTimer = setInterval(() => runAutoSync(oauthClient), autoSyncIntervalMinutes * 60 * 1000);
 }
 function startServer() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -102,11 +137,35 @@ function startServer() {
         if ((_a = oauthClient.credentials) === null || _a === void 0 ? void 0 : _a.access_token) {
             (0, gmail_1.getAccountEmail)(oauthClient).catch(() => undefined);
         }
-        if ((0, gmail_1.autoSyncEnabled)()) {
-            (0, logger_1.log)('info', 'auto-sync enabled', { minutes: config_1.AUTO_SYNC_MINUTES });
-            autoSyncTimer = setInterval(() => runAutoSync(oauthClient), config_1.AUTO_SYNC_MINUTES * 60 * 1000);
+        if (autoSyncEnabled) {
+            (0, logger_1.log)('info', 'auto-sync enabled', { minutes: autoSyncIntervalMinutes });
+            scheduleAutoSync(oauthClient);
             setTimeout(() => runAutoSync(oauthClient), 5000);
         }
+        app.get('/api/auto-sync', (_req, res) => {
+            res.json({
+                enabled: autoSyncEnabled,
+                intervalMinutes: autoSyncIntervalMinutes,
+                lastSyncAt: autoSyncLastSyncAt,
+            });
+        });
+        app.post('/api/auto-sync', (req, res) => {
+            var _a;
+            const { enabled, intervalMinutes } = (_a = req.body) !== null && _a !== void 0 ? _a : {};
+            autoSyncEnabled = Boolean(enabled);
+            if (typeof intervalMinutes === 'number' && Number.isFinite(intervalMinutes)) {
+                autoSyncIntervalMinutes = Math.max(1, Math.floor(intervalMinutes));
+            }
+            if (autoSyncEnabled) {
+                autoSyncLastSyncAt = Date.now();
+            }
+            scheduleAutoSync(oauthClient);
+            res.json({
+                enabled: autoSyncEnabled,
+                intervalMinutes: autoSyncIntervalMinutes,
+                lastSyncAt: autoSyncLastSyncAt,
+            });
+        });
         app.get('/api/status', (req, res) => __awaiter(this, void 0, void 0, function* () {
             var _a;
             const authorized = yield (0, gmail_1.ensureAccessToken)(oauthClient);
@@ -178,38 +237,102 @@ function startServer() {
                 const order = req.query.order === 'asc' ? 'ASC' : 'DESC';
                 const limit = Math.min(Number((_a = req.query.limit) !== null && _a !== void 0 ? _a : 50), 200);
                 const offset = Math.max(Number((_b = req.query.offset) !== null && _b !== void 0 ? _b : 0), 0);
+                const includeSent = req.query.include_sent === '1';
                 const readFilter = typeof req.query.read === 'string' ? req.query.read : 'all';
+                const priorityFilter = typeof req.query.priority === 'string' ? req.query.priority : 'all';
                 const whereClauses = [];
                 const params = [];
                 whereClauses.push('account_email = ?');
                 params.push(accountEmail);
+                if (!includeSent) {
+                    whereClauses.push('COALESCE(from_email, \'\') NOT LIKE ?');
+                    params.push(`%${accountEmail}%`);
+                }
                 if (readFilter === 'read') {
                     whereClauses.push('is_read = 1');
                 }
                 else if (readFilter === 'unread') {
                     whereClauses.push('is_read = 0');
                 }
+                if (priorityFilter === '0' || priorityFilter === '1' || priorityFilter === '2') {
+                    whereClauses.push('priority = ?');
+                    params.push(Number(priorityFilter));
+                }
                 const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
                 const db = yield (0, db_1.ensureDatabase)();
                 yield (0, db_1.migrateUnknownAccountEmail)(db, accountEmail);
                 const rows = yield db.all(`
-        SELECT message_id as id, subject, from_email, date, snippet, internal_date, is_read
+        SELECT message_id as id, subject, from_email, date, snippet, internal_date, is_read, priority
         FROM gmail_messages
         ${whereSql}
         ORDER BY internal_date ${order}
         LIMIT ? OFFSET ?
       `, [...params, limit, offset]);
                 yield db.close();
-                (0, logger_1.log)('debug', 'api/messages ok', { accountEmail, rows: rows.length, order, limit, offset, readFilter });
-                res.json({ messages: rows });
+                (0, logger_1.log)('debug', 'api/messages ok', { accountEmail, rows: rows.length, order, limit, offset, readFilter, priorityFilter });
+                res.json({ messages: rows, offset, limit });
             }
             catch (err) {
                 (0, logger_1.log)('error', 'api/messages failed', { error: (_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : String(err) });
                 res.status(500).json({ error: (_d = err === null || err === void 0 ? void 0 : err.message) !== null && _d !== void 0 ? _d : 'Failed to load messages' });
             }
         }));
+        app.get('/api/search', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c;
+            const ok = yield (0, gmail_1.ensureAccessToken)(oauthClient);
+            if (!ok) {
+                res.status(401).json({ error: 'Not authorized. Login first.' });
+                return;
+            }
+            try {
+                const accountEmail = yield (0, gmail_1.getAccountEmail)(oauthClient);
+                const sender = typeof req.query.sender === 'string' ? req.query.sender.trim() : '';
+                const subject = typeof req.query.subject === 'string' ? req.query.subject.trim() : '';
+                const threadId = typeof req.query.thread_id === 'string' ? req.query.thread_id.trim() : '';
+                const messageId = typeof req.query.message_id === 'string' ? req.query.message_id.trim() : '';
+                const limit = Math.min(Number((_a = req.query.limit) !== null && _a !== void 0 ? _a : 50), 200);
+                const whereClauses = ['account_email = ?'];
+                const params = [accountEmail];
+                if (sender) {
+                    whereClauses.push('from_email LIKE ?');
+                    params.push(`%${sender}%`);
+                }
+                if (subject) {
+                    whereClauses.push('subject LIKE ?');
+                    params.push(`%${subject}%`);
+                }
+                if (threadId) {
+                    whereClauses.push('thread_id = ?');
+                    params.push(threadId);
+                }
+                if (messageId) {
+                    whereClauses.push('message_id = ?');
+                    params.push(messageId);
+                }
+                if (whereClauses.length === 1) {
+                    res.status(400).json({ error: 'Provide at least one search field.' });
+                    return;
+                }
+                const whereSql = `WHERE ${whereClauses.join(' AND ')}`;
+                const db = yield (0, db_1.ensureDatabase)();
+                yield (0, db_1.migrateUnknownAccountEmail)(db, accountEmail);
+                const rows = yield db.all(`
+        SELECT message_id as id, subject, from_email, date, snippet, internal_date, is_read, priority
+        FROM gmail_messages
+        ${whereSql}
+        ORDER BY internal_date DESC
+        LIMIT ?
+      `, [...params, limit]);
+                yield db.close();
+                res.json({ messages: rows });
+            }
+            catch (err) {
+                (0, logger_1.log)('error', 'api/search failed', { error: (_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : String(err) });
+                res.status(500).json({ error: (_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : 'Failed to search messages' });
+            }
+        }));
         app.get('/api/sent', (req, res) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             const ok = yield (0, gmail_1.ensureAccessToken)(oauthClient);
             if (!ok) {
                 res.status(401).json({ error: 'Not authorized. Login first.' });
@@ -230,12 +353,15 @@ function startServer() {
                     return { after: toQuery(fromDate), before: toQuery(beforeDate) };
                 })();
                 const q = `in:sent after:${after} before:${before}`;
+                const pageToken = typeof req.query.pageToken === 'string' ? req.query.pageToken : undefined;
+                const maxResults = Math.min(Number((_a = req.query.limit) !== null && _a !== void 0 ? _a : 50), 200);
                 const listResponse = yield gmail.users.messages.list({
                     userId: 'me',
                     q,
-                    maxResults: 100,
+                    maxResults,
+                    pageToken,
                 });
-                const messages = (_a = listResponse.data.messages) !== null && _a !== void 0 ? _a : [];
+                const messages = (_b = listResponse.data.messages) !== null && _b !== void 0 ? _b : [];
                 const results = [];
                 for (const msg of messages) {
                     if (!msg.id)
@@ -246,24 +372,26 @@ function startServer() {
                         format: 'metadata',
                         metadataHeaders: ['To', 'Subject', 'Date'],
                     });
-                    const headers = (_c = (_b = messageResponse.data.payload) === null || _b === void 0 ? void 0 : _b.headers) !== null && _c !== void 0 ? _c : [];
+                    const headers = (_d = (_c = messageResponse.data.payload) === null || _c === void 0 ? void 0 : _c.headers) !== null && _d !== void 0 ? _d : [];
                     const getHeader = (name) => { var _a, _b; return (_b = (_a = headers.find((h) => { var _a; return ((_a = h.name) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === name.toLowerCase(); })) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : null; };
                     results.push({
                         id: msg.id,
                         subject: getHeader('Subject'),
                         to_email: getHeader('To'),
                         date: getHeader('Date'),
-                        snippet: (_d = messageResponse.data.snippet) !== null && _d !== void 0 ? _d : null,
+                        snippet: (_e = messageResponse.data.snippet) !== null && _e !== void 0 ? _e : null,
                         internal_date: messageResponse.data.internalDate
                             ? Number(messageResponse.data.internalDate)
                             : null,
                     });
                 }
-                res.json({ messages: results, from, to });
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, `api/sent ok count=${results.length} from=${from} to=${to}`);
+                res.json({ messages: results, from, to, nextPageToken: (_f = listResponse.data.nextPageToken) !== null && _f !== void 0 ? _f : null });
             }
             catch (err) {
-                (0, logger_1.log)('error', 'api/sent failed', { error: (_e = err === null || err === void 0 ? void 0 : err.message) !== null && _e !== void 0 ? _e : String(err) });
-                res.status(500).json({ error: (_f = err === null || err === void 0 ? void 0 : err.message) !== null && _f !== void 0 ? _f : 'Failed to load sent messages' });
+                (0, logger_1.log)('error', 'api/sent failed', { error: (_g = err === null || err === void 0 ? void 0 : err.message) !== null && _g !== void 0 ? _g : String(err) });
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, `api/sent failed error=${(_h = err === null || err === void 0 ? void 0 : err.message) !== null && _h !== void 0 ? _h : String(err)}`);
+                res.status(500).json({ error: (_j = err === null || err === void 0 ? void 0 : err.message) !== null && _j !== void 0 ? _j : 'Failed to load sent messages' });
             }
         }));
         app.post('/api/send', (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -293,8 +421,74 @@ function startServer() {
                 res.status(500).json({ error: (_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : 'Failed to send email' });
             }
         }));
-        app.get('/api/agent/config', (req, res) => {
+        app.get('/api/drafts', (_req, res) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
+            try {
+                const db = yield (0, db_1.ensureDatabase)();
+                const drafts = yield (0, drafts_1.listDrafts)(db);
+                yield db.close();
+                res.json({ drafts });
+            }
+            catch (err) {
+                (0, logger_1.log)('error', 'api/drafts failed', { error: (_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : String(err) });
+                res.status(500).json({ error: (_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : 'Failed to load drafts' });
+            }
+        }));
+        app.get('/api/drafts/:id', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
+            try {
+                const db = yield (0, db_1.ensureDatabase)();
+                const draft = yield (0, drafts_1.getDraft)(db, req.params.id);
+                yield db.close();
+                if (!draft) {
+                    res.status(404).json({ error: 'Draft not found' });
+                    return;
+                }
+                res.json({ draft });
+            }
+            catch (err) {
+                (0, logger_1.log)('error', 'api/draft get failed', { error: (_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : String(err) });
+                res.status(500).json({ error: (_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : 'Failed to load draft' });
+            }
+        }));
+        app.post('/api/drafts', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c;
+            const { to, subject, text, html, id } = (_a = req.body) !== null && _a !== void 0 ? _a : {};
+            if (!to || !subject) {
+                res.status(400).json({ error: 'Missing "to" or "subject"' });
+                return;
+            }
+            try {
+                const db = yield (0, db_1.ensureDatabase)();
+                const draftId = yield (0, drafts_1.saveDraft)(db, {
+                    to: String(to),
+                    subject: String(subject),
+                    text: typeof text === 'string' ? text : undefined,
+                    html: typeof html === 'string' ? html : undefined,
+                }, typeof id === 'string' ? id : undefined);
+                yield db.close();
+                res.json({ id: draftId });
+            }
+            catch (err) {
+                (0, logger_1.log)('error', 'api/draft save failed', { error: (_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : String(err) });
+                res.status(500).json({ error: (_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : 'Failed to save draft' });
+            }
+        }));
+        app.delete('/api/drafts/:id', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
+            try {
+                const db = yield (0, db_1.ensureDatabase)();
+                yield (0, drafts_1.deleteDraft)(db, req.params.id);
+                yield db.close();
+                res.json({ ok: true });
+            }
+            catch (err) {
+                (0, logger_1.log)('error', 'api/draft delete failed', { error: (_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : String(err) });
+                res.status(500).json({ error: (_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : 'Failed to delete draft' });
+            }
+        }));
+        app.get('/api/agent/config', (req, res) => {
+            var _a, _b, _c, _d;
             const config = (0, agentConfig_1.readAgentConfig)();
             res.json({
                 provider: config.provider,
@@ -302,24 +496,44 @@ function startServer() {
                 baseUrl: (_b = config.baseUrl) !== null && _b !== void 0 ? _b : null,
                 hasApiKey: Boolean(config.apiKey),
                 apiKeyMasked: (0, agentConfig_1.maskApiKey)(config.apiKey),
+                systemPrompt: (_c = config.systemPrompt) !== null && _c !== void 0 ? _c : '',
+                primaryEmail: (_d = config.primaryEmail) !== null && _d !== void 0 ? _d : '',
             });
         });
+        app.get('/api/agent/sessions', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const sessions = yield (0, chatDb_1.listChatSessions)(50);
+            res.json({ sessions });
+        }));
+        app.post('/api/agent/sessions', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const title = typeof ((_a = req.body) === null || _a === void 0 ? void 0 : _a.title) === 'string' && req.body.title.trim() ? req.body.title.trim() : undefined;
+            const id = yield (0, chatDb_1.createChatSession)(title);
+            res.json({ id });
+        }));
+        app.get('/api/agent/sessions/:id/messages', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const sessionId = req.params.id;
+            yield (0, chatDb_1.ensureChatSession)(sessionId);
+            const messages = yield (0, chatDb_1.getChatMessages)(sessionId, 500);
+            res.json({ sessionId, messages });
+        }));
         app.post('/api/agent/config', (req, res) => {
-            var _a, _b, _c;
+            var _a, _b, _c, _d, _e;
             const current = (0, agentConfig_1.readAgentConfig)();
-            const { provider, apiKey, baseUrl, model } = (_a = req.body) !== null && _a !== void 0 ? _a : {};
-            const next = (0, agentConfig_1.saveAgentConfig)(Object.assign(Object.assign({}, current), { provider: provider === 'openai' ? provider : current.provider, baseUrl: typeof baseUrl === 'string' ? baseUrl : current.baseUrl, model: typeof model === 'string' ? model : current.model, apiKey: typeof apiKey === 'string' && apiKey.trim() ? apiKey.trim() : current.apiKey }));
+            const { provider, apiKey, baseUrl, model, systemPrompt, primaryEmail } = (_a = req.body) !== null && _a !== void 0 ? _a : {};
+            const next = (0, agentConfig_1.saveAgentConfig)(Object.assign(Object.assign({}, current), { provider: provider === 'openai' ? provider : current.provider, baseUrl: typeof baseUrl === 'string' ? baseUrl : current.baseUrl, model: typeof model === 'string' ? model : current.model, systemPrompt: typeof systemPrompt === 'string' ? systemPrompt : current.systemPrompt, primaryEmail: typeof primaryEmail === 'string' ? primaryEmail : current.primaryEmail, apiKey: typeof apiKey === 'string' && apiKey.trim() ? apiKey.trim() : current.apiKey }));
             res.json({
                 provider: next.provider,
                 model: (_b = next.model) !== null && _b !== void 0 ? _b : null,
                 baseUrl: (_c = next.baseUrl) !== null && _c !== void 0 ? _c : null,
                 hasApiKey: Boolean(next.apiKey),
                 apiKeyMasked: (0, agentConfig_1.maskApiKey)(next.apiKey),
+                systemPrompt: (_d = next.systemPrompt) !== null && _d !== void 0 ? _d : '',
+                primaryEmail: (_e = next.primaryEmail) !== null && _e !== void 0 ? _e : '',
             });
         });
         app.post('/api/agent/chat', (req, res) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
-            const { message, model } = (_a = req.body) !== null && _a !== void 0 ? _a : {};
+            var _a, _b, _c, _d, _e;
+            const { message, model, sessionId: sessionIdRaw, currentEmailId } = (_a = req.body) !== null && _a !== void 0 ? _a : {};
             if (!message || typeof message !== 'string') {
                 res.status(400).json({ error: 'Missing message' });
                 return;
@@ -333,18 +547,54 @@ function startServer() {
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
             (_b = res.flushHeaders) === null || _b === void 0 ? void 0 : _b.call(res);
+            const sessionId = typeof sessionIdRaw === 'string' && sessionIdRaw.trim()
+                ? sessionIdRaw.trim()
+                : yield (0, chatDb_1.createChatSession)();
+            yield (0, chatDb_1.ensureChatSession)(sessionId);
+            let messageWithContext = message;
+            if (currentEmailId && typeof currentEmailId === 'string') {
+                try {
+                    const accountEmail = yield (0, gmail_1.getAccountEmail)(oauthClient);
+                    const db = yield (0, db_1.ensureDatabase)();
+                    const emailData = yield db.get(`SELECT message_id as id, subject, from_email, to_email, date, snippet
+           FROM gmail_messages
+           WHERE account_email = ? AND message_id = ?`, [accountEmail, currentEmailId]);
+                    yield db.close();
+                    if (emailData) {
+                        const contextInfo = `<system-context>
+当前用户正在查看以下邮件：
+- 邮件ID: ${emailData.id}
+- 主题: ${emailData.subject || '(无主题)'}
+- 发件人: ${emailData.from_email || '(未知)'}
+- 收件人: ${emailData.to_email || '(未知)'}
+- 日期: ${emailData.date || '(未知)'}
+- 摘要: ${emailData.snippet || '(无摘要)'}
+
+当用户提到"这封邮件"、"回复"、"回复这个"等时，指的是上述邮件。
+</system-context>
+
+`;
+                        messageWithContext = contextInfo + message;
+                        void (0, logDb_1.logInteraction)(LOG_SOURCE, `agent chat with email context emailId=${currentEmailId}`);
+                    }
+                }
+                catch (err) {
+                    (0, logger_1.log)('warn', 'failed to fetch email context', { error: (_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : String(err) });
+                }
+            }
             const runnerPath = node_path_1.default.join(process.cwd(), 'agent', 'zypher_runner.ts');
-            const args = ['run', '-A', runnerPath, '--config', agentConfig_1.AGENT_CONFIG_PATH];
+            const args = ['run', '-A', runnerPath, '--config', agentConfig_1.AGENT_CONFIG_PATH, '--session', sessionId];
             if (typeof model === 'string' && model.trim()) {
                 args.push('--model', model.trim());
             }
-            (0, logger_1.log)('info', 'agent chat spawn', { runnerPath, model: (_c = model !== null && model !== void 0 ? model : config.model) !== null && _c !== void 0 ? _c : null });
-            res.write(`event: start\ndata: ${JSON.stringify({ type: 'start' })}\n\n`);
+            (0, logger_1.log)('info', 'agent chat spawn', { runnerPath, model: (_d = model !== null && model !== void 0 ? model : config.model) !== null && _d !== void 0 ? _d : null });
+            void (0, logDb_1.logInteraction)(LOG_SOURCE, `agent chat spawn model=${(_e = model !== null && model !== void 0 ? model : config.model) !== null && _e !== void 0 ? _e : null}`);
+            res.write(`event: start\ndata: ${JSON.stringify({ type: 'start', sessionId })}\n\n`);
             const proc = (0, node_child_process_1.spawn)('deno', args, {
                 stdio: ['pipe', 'pipe', 'pipe'],
                 env: process.env,
             });
-            proc.stdin.write(message);
+            proc.stdin.write(messageWithContext);
             proc.stdin.end();
             let buffer = '';
             proc.stdout.on('data', (chunk) => {
@@ -362,11 +612,13 @@ function startServer() {
             proc.stderr.on('data', (chunk) => {
                 const msg = chunk.toString();
                 (0, logger_1.log)('warn', 'agent chat stderr', { message: msg });
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, `agent chat stderr ${msg.trim()}`);
                 const payload = JSON.stringify({ type: 'stderr', message: msg });
                 res.write(`event: stderr\ndata: ${payload}\n\n`);
             });
             proc.on('error', (err) => {
                 (0, logger_1.log)('error', 'agent chat spawn failed', { error: err.message });
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, `agent chat spawn failed error=${err.message}`);
                 const payload = JSON.stringify({ type: 'error', message: err.message });
                 res.write(`event: error\ndata: ${payload}\n\n`);
                 res.end();
@@ -377,6 +629,7 @@ function startServer() {
                     res.write(`data: ${leftover}\n\n`);
                 }
                 (0, logger_1.log)('info', 'agent chat closed', { code, signal });
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, `agent chat closed code=${code !== null && code !== void 0 ? code : 'null'} signal=${signal !== null && signal !== void 0 ? signal : 'null'}`);
                 const payload = JSON.stringify({ type: 'done', code, signal });
                 res.write(`event: done\ndata: ${payload}\n\n`);
                 res.end();
@@ -405,7 +658,7 @@ function startServer() {
                 const db = yield (0, db_1.ensureDatabase)();
                 yield (0, db_1.migrateUnknownAccountEmail)(db, accountEmail);
                 const row = yield db.get(`
-        SELECT message_id as id, subject, from_email, to_email, date, snippet, is_read, body_text, body_html
+        SELECT message_id as id, subject, from_email, to_email, date, snippet, is_read, body_text, body_html, priority
         FROM gmail_messages
         WHERE account_email = ? AND message_id = ?
       `, [accountEmail, id]);
@@ -493,10 +746,11 @@ function startServer() {
                 prompt: 'consent',
             });
             (0, logger_1.log)('info', 'oauth start', { redirectUri: config_1.REDIRECT_URI });
+            void (0, logDb_1.logInteraction)(LOG_SOURCE, `oauth start redirectUri=${config_1.REDIRECT_URI}`);
             res.redirect(authUrl);
         });
         app.get('/auth/callback', (req, res) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             const code = String((_a = req.query.code) !== null && _a !== void 0 ? _a : '');
             if (!code) {
                 res.status(400).send('Missing code in callback.');
@@ -504,11 +758,13 @@ function startServer() {
             }
             try {
                 yield (0, gmail_1.handleOauthCallback)(oauthClient, code);
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, 'oauth callback ok');
                 res.redirect('/?authed=1');
             }
             catch (err) {
                 (0, logger_1.log)('error', 'oauth callback failed', { error: (_b = err === null || err === void 0 ? void 0 : err.message) !== null && _b !== void 0 ? _b : String(err) });
-                res.status(500).send(`Failed to exchange code: ${(_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : 'Unknown error'}`);
+                void (0, logDb_1.logInteraction)(LOG_SOURCE, `oauth callback failed error=${(_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : String(err)}`);
+                res.status(500).send(`Failed to exchange code: ${(_d = err === null || err === void 0 ? void 0 : err.message) !== null && _d !== void 0 ? _d : 'Unknown error'}`);
             }
         }));
         app.get('/api/sync', (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -541,6 +797,7 @@ function startServer() {
                         to: range.to,
                         importedCount: Number((_a = row === null || row === void 0 ? void 0 : row.count) !== null && _a !== void 0 ? _a : 0),
                     });
+                    void (0, logDb_1.logInteraction)(LOG_SOURCE, `sync skipped account=${accountEmail} from=${range.from} to=${range.to}`);
                     res.json({
                         skipped: true,
                         processed: 0,

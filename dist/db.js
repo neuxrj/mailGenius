@@ -38,12 +38,18 @@ function ensureDatabase() {
       body_text TEXT,
       body_html TEXT,
       raw TEXT,
+      priority INTEGER DEFAULT 0,
       PRIMARY KEY (account_email, message_id)
     );
   `);
         const columns = yield db.all(`PRAGMA table_info(gmail_messages);`);
         const hasAccountEmail = columns.some((col) => col.name === 'account_email');
         const hasMessageId = columns.some((col) => col.name === 'message_id');
+        const hasPriority = columns.some((col) => col.name === 'priority');
+        // 添加 priority 字段迁移（如果表已存在但缺少该字段）
+        if (hasAccountEmail && hasMessageId && !hasPriority) {
+            yield db.exec(`ALTER TABLE gmail_messages ADD COLUMN priority INTEGER DEFAULT 0;`);
+        }
         if (!hasAccountEmail || !hasMessageId) {
             const legacyHasIsRead = columns.some((col) => col.name === 'is_read');
             yield db.exec(`
@@ -61,6 +67,7 @@ function ensureDatabase() {
         body_text TEXT,
         body_html TEXT,
         raw TEXT,
+        priority INTEGER DEFAULT 0,
         PRIMARY KEY (account_email, message_id)
       );
     `);
@@ -79,7 +86,8 @@ function ensureDatabase() {
         is_read,
         body_text,
         body_html,
-        raw
+        raw,
+        priority
       )
       SELECT
         '' as account_email,
@@ -94,7 +102,8 @@ function ensureDatabase() {
         ${isReadExpr},
         body_text,
         body_html,
-        raw
+        raw,
+        0 as priority
       FROM gmail_messages;
     `);
             yield db.exec(`DROP TABLE gmail_messages;`);
@@ -108,6 +117,17 @@ function ensureDatabase() {
       to_date TEXT NOT NULL,
       finished_at INTEGER NOT NULL,
       processed_count INTEGER NOT NULL
+    );
+  `);
+        yield db.exec(`
+    CREATE TABLE IF NOT EXISTS mail_drafts (
+      id TEXT PRIMARY KEY,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      to_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      text TEXT,
+      html TEXT
     );
   `);
         return db;

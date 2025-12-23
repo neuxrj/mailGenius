@@ -18,6 +18,7 @@ export type NormalizedMessage = {
   bodyText?: string | null
   bodyHtml?: string | null
   raw?: string
+  priority?: number
 }
 
 function parseDateOnly(dateStr: string): Date {
@@ -175,6 +176,7 @@ export async function syncMessages(auth: any, accountEmail: string, from: string
         bodyText: text,
         bodyHtml: html,
         raw: JSON.stringify(message),
+        priority: 0, // 批量导入设为未分析
       })
 
       processedCount += 1
@@ -205,6 +207,7 @@ export async function syncMessagesByTimestamp(
 
   let pageToken: string | undefined
   let processedCount = 0
+  const newMessageIds: string[] = []
 
   do {
     const listResponse = await gmail.users.messages.list({
@@ -241,8 +244,10 @@ export async function syncMessagesByTimestamp(
         bodyText: text,
         bodyHtml: html,
         raw: JSON.stringify(message),
+        priority: 1, // 自动同步新邮件默认为低优先级
       })
 
+      newMessageIds.push(message.id!)
       processedCount += 1
     }
 
@@ -250,7 +255,7 @@ export async function syncMessagesByTimestamp(
   } while (pageToken)
 
   await db.close()
-  return { processedCount, fromMs, toMs }
+  return { processedCount, fromMs, toMs, newMessageIds }
 }
 
 export async function saveMessage(db: any, accountEmail: string, msg: NormalizedMessage) {
@@ -269,8 +274,9 @@ export async function saveMessage(db: any, accountEmail: string, msg: Normalized
         is_read,
         body_text,
         body_html,
-        raw
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        raw,
+        priority
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       accountEmail,
@@ -286,6 +292,7 @@ export async function saveMessage(db: any, accountEmail: string, msg: Normalized
       msg.bodyText ?? null,
       msg.bodyHtml ?? null,
       msg.raw ?? null,
+      msg.priority ?? 0,
     ],
   )
 }
