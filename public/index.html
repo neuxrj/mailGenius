@@ -1,0 +1,1578 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MailAgent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+  />
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d1e22;
+      --muted: #6a6f7a;
+      --accent: #f05d23;
+      --accent-2: #f7c45d;
+      --card: rgba(255, 255, 255, 0.92);
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      --ring: rgba(240, 93, 35, 0.25);
+      --border: rgba(29, 30, 34, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh; /* 强制全屏高度 */
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+              radial-gradient(circle at 10% 10%, rgba(240, 93, 35, 0.12), transparent 40%),
+              linear-gradient(180deg, #f8f2e6 0%, #f2efe9 100%);
+      overflow: hidden; /* 禁止 body 滚动，交给内部容器 */
+    }
+
+    /* 核心布局容器 */
+    .frame {
+      max-width: 1600px;
+      width: 96%;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+    }
+
+    header {
+      flex-shrink: 0;
+      margin-bottom: 20px;
+      padding: 0 12px;
+    }
+
+    .eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 12px; color: var(--muted); }
+    h1 { margin: 0; font-size: 2rem; line-height: 1.1; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; }
+
+    /* 卡片通用 */
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+
+    /* 首页居中特殊处理 */
+    #home-view {
+      margin: auto; /* 垂直水平居中 */
+      width: 100%;
+      max-width: 700px;
+    }
+
+    /* 按钮与表单 */
+    button {
+      cursor: pointer; border: none; border-radius: 10px; padding: 10px 18px;
+      font-weight: 600; font-size: 0.9rem; background: var(--ink); color: #fff;
+      transition: all 0.2s ease;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+    button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--border); box-shadow: none; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    input, select, textarea {
+      font-family: inherit; width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.7); outline: none;
+      font-size: 0.95rem; transition: border 0.2s, box-shadow 0.2s;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); background: #fff; }
+
+    .hidden { display: none !important; }
+
+    .status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 99px; font-size: 0.85rem; background: rgba(0,0,0,0.05); }
+    .status-pill[data-active="true"] { background: rgba(240, 93, 35, 0.1); color: var(--ink); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+    .status-pill[data-active="true"] .status-dot { background: var(--accent); }
+
+    /* ================= Manager 视图布局 (Split View) ================= */
+    #manager-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0; /* 允许 Flex 子项滚动 */
+    }
+
+    .manager-topbar {
+      flex-shrink: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; padding: 0 8px;
+    }
+
+    /* 顶部自动同步小组件样式 */
+    .sync-widget {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-right: 8px;
+    }
+
+    .sync-widget label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .sync-widget input[type="number"] {
+      padding: 4px 8px;
+      width: 60px;
+      text-align: center;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      height: auto;
+      background: #f9f9f9;
+    }
+
+    .manager-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 420px; /* 左侧自适应，右侧固定 420px */
+      gap: 20px;
+      min-height: 0; /* 关键：允许网格内滚动 */
+      padding-bottom: 10px;
+    }
+
+    /* === 左侧：邮件列表与详情 (卡片风格) === */
+    .mail-section {
+      display: flex;
+      flex-direction: column;
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+
+    .mail-content-wrapper {
+      flex: 1;
+      overflow-y: auto; /* 垂直滚动 */
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; padding: 0 20px; }
+
+    /* 列表面板布局调整 */
+    #list-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    /* 列表项 */
+    .list {
+      display: grid;
+      gap: 8px;
+      flex: 1;
+      padding: 0 20px 20px 20px;
+    }
+
+    .mail-item {
+      padding: 14px 16px; border-radius: 12px; border: 1px solid transparent;
+      background: #fff; cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .mail-item:hover { border-color: rgba(0,0,0,0.1); transform: translateX(2px); }
+    .mail-item.active { border-color: var(--accent); background: #fff8f5; }
+    .mail-subject { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .mail-meta { font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
+    .mail-read input { accent-color: var(--accent); }
+
+    /* === 底部悬浮分页栏样式 === */
+    .pagination-bar {
+      display: flex;
+      justify-content: center; /* 居中对齐 */
+      align-items: center;
+      gap: 20px;
+      padding: 12px 0;
+      margin-top: auto; /* 确保位于底部 */
+
+      /* 粘性定位 */
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+    }
+
+    .page-indicator {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* 详情页 */
+    .detail-body {
+      padding: 20px; border-radius: 12px; background: #fff; border: 1px solid var(--border);
+      min-height: 400px; margin-top: 16px;
+    }
+    .detail-body iframe { border: none; width: 100%; min-height: 600px; }
+    .back-btn { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
+
+    /* === 右侧：AI Agent 侧边栏 (悬浮/半透明风格) === */
+    .chat-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      position: relative;
+    }
+
+    .chat-header {
+      flex-shrink: 0;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 16px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+
+    /* 聊天气泡优化 */
+    .chat-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 100%;
+      /* 强制换行，防止撑开容器 */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .chat-bubble.user {
+      background: var(--ink);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 12px rgba(29, 30, 34, 0.15);
+    }
+
+    .chat-bubble.agent {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.05);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .chat-input-area {
+      flex-shrink: 0;
+      padding: 16px;
+      background: rgba(255,255,255,0.9);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .chat-input-area textarea {
+      min-height: 50px;
+      max-height: 150px;
+      resize: none;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: #fff;
+    }
+
+    /* Agent 设置面板 (绝对定位悬浮) */
+    .chat-config-panel {
+      position: absolute;
+      top: 60px; right: 0; z-index: 100; width: 100%;
+      background: rgba(255,255,255,0.95);
+      padding: 20px; border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    /* 响应式 */
+    @media (max-width: 1024px) {
+      .manager-layout { grid-template-columns: 1fr 320px; }
+    }
+    @media (max-width: 800px) {
+      body { overflow: auto; height: auto; }
+      .frame { height: auto; padding-bottom: 40px; }
+      #manager-view { display: block; }
+      .manager-layout { grid-template-columns: 1fr; height: auto; }
+      .chat-shell { height: 600px; margin-top: 24px; }
+      .manager-topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .manager-topbar .right { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+<div class="frame">
+  <header>
+    <div class="eyebrow">MailAgent</div>
+    <h1>Gmail → SQLite</h1>
+    <p class="subtitle">连接 Gmail，导入数据，与你的邮件对话。</p>
+  </header>
+
+  <section class="card" id="home-view">
+    <div style="display: grid; gap: 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="status-pill" id="status-pill" data-active="false">
+          <span class="status-dot"></span>
+          <span id="status-text">正在检查授权状态...</span>
+        </div>
+      </div>
+
+      <div id="home-summary" class="subtitle" style="font-size:1.1rem; color:var(--ink);"></div>
+
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button id="login-btn">连接 Gmail</button>
+        <button id="enter-btn" class="secondary">进入邮件管理</button>
+        <button id="show-import-btn" class="secondary">继续导入邮件</button>
+      </div>
+
+      <div id="import-panel" class="hidden" style="margin-top: 10px; padding-top:20px; border-top:1px solid var(--border);">
+        <h2 style="font-size:1.2rem; margin:0 0 12px;">导入邮件</h2>
+        <form id="range-form" style="display: grid; gap: 12px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div><label style="font-size:0.8rem; color:var(--muted)">From</label><input id="from-date" type="date" required /></div>
+            <div><label style="font-size:0.8rem; color:var(--muted)">To</label><input id="to-date" type="date" required /></div>
+          </div>
+          <button id="sync-btn" type="submit">开始导入（写入 SQLite）</button>
+        </form>
+        <div class="subtitle" style="margin-top: 10px; font-size:0.8rem;">
+          数据写入 <code>gmail.sqlite</code>。重复时间段会自动去重。
+        </div>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.03); padding:12px; border-radius:10px;">
+        <strong style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;">系统日志</strong>
+        <div id="log" class="subtitle" style="font-size:0.9rem;">等待操作。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="manager-view" class="hidden">
+    <div class="manager-topbar">
+      <div class="left" style="display:flex; align-items:center; gap:12px;">
+        <button id="back-home-btn" class="secondary" type="button" style="padding:6px 12px;">← 首页</button>
+        <div class="status-pill" id="manager-pill" data-active="true">
+          <span class="status-dot"></span>
+          <span id="manager-email">未连接</span>
+        </div>
+        <span class="subtitle" id="manager-count" style="font-size:0.85rem"></span>
+      </div>
+
+      <div class="right" style="display:flex; align-items:center; gap:8px;">
+        <div class="sync-widget" title="自动后台拉取新邮件">
+          <label>
+            <input id="auto-sync-toggle" type="checkbox" style="accent-color: var(--accent); width:auto;" />
+            <span>自动同步</span>
+          </label>
+          <div id="auto-sync-options" style="display:flex; align-items:center; gap:4px; border-left:1px solid var(--border); padding-left:8px; margin-left:4px;">
+            <input id="auto-sync-interval" type="number" min="1" step="1" value="30" />
+            <span style="font-size:0.8rem; color:var(--muted)">分钟</span>
+          </div>
+        </div>
+
+        <button id="import-more-btn" class="secondary" type="button" style="padding:8px 14px;">导入</button>
+        <button id="refresh-list-btn" class="secondary" type="button" style="padding:8px 14px;">刷新</button>
+      </div>
+    </div>
+
+    <div class="manager-layout">
+
+      <div class="mail-section">
+        <div class="mail-content-wrapper">
+
+          <div class="toolbar" style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px; margin-top:20px;">
+            <button id="tab-inbox" class="secondary">收件箱</button>
+            <button id="tab-sent" class="secondary">已发送</button>
+            <button id="tab-compose" class="secondary">写邮件</button>
+          </div>
+
+          <div id="list-panel">
+            <div class="toolbar" id="inbox-toolbar">
+              <select id="order-select" style="width:auto;"><option value="desc">时间：倒序</option><option value="asc">时间：正序</option></select>
+              <select id="read-filter" style="width:auto;"><option value="all">全部</option><option value="unread">未读</option><option value="read">已读</option></select>
+              <button id="load-btn" class="secondary" type="button">加载</button>
+            </div>
+
+            <div class="toolbar" id="search-toolbar" style="gap:10px; flex-wrap:wrap; align-items:flex-end;">
+              <div style="display:grid; gap:6px;">
+                <label class="footer">发件人</label>
+                <input id="search-from" type="text" placeholder="sender@example.com" />
+              </div>
+              <div style="display:grid; gap:6px;">
+                <label class="footer">主题</label>
+                <input id="search-subject" type="text" placeholder="关键词" />
+              </div>
+              <button id="search-btn" class="secondary" type="button">搜索</button>
+            </div>
+
+            <div class="toolbar hidden" id="sent-toolbar">
+              <input type="date" id="sent-from" style="width:auto;" />
+              <span style="color:var(--muted)">-</span>
+              <input type="date" id="sent-to" style="width:auto;" />
+              <button id="sent-refresh" class="secondary" type="button">刷新</button>
+            </div>
+
+            <div id="mail-list" class="list"></div>
+
+            <div id="pagination-toolbar" class="pagination-bar">
+              <button id="page-prev" class="secondary" type="button">← 上一页</button>
+              <div id="page-indicator" class="page-indicator">第 1 页</div>
+              <button id="page-next" class="secondary" type="button">下一页 →</button>
+            </div>
+          </div>
+
+          <div id="detail-panel" class="hidden" style="padding: 0 20px 20px 20px;">
+            <div class="back-row" style="display: flex; justify-content: space-between; margin-bottom: 16px; align-items:center;">
+              <button id="back-list-btn" class="back-btn secondary" type="button">← 返回列表</button>
+              <button id="reply-btn" class="secondary" type="button" disabled>回复</button>
+            </div>
+            <h2 id="detail-subject" style="margin: 0 0 10px;">选择一封邮件</h2>
+            <div class="mail-meta" id="detail-meta" style="margin-bottom: 20px;"></div>
+            <div id="detail-body" class="detail-body">未选择邮件。</div>
+          </div>
+
+          <div id="compose-panel" class="hidden" style="padding: 0 20px 20px 20px;">
+            <h3 style="margin-top:0;">写邮件</h3>
+            <form id="compose-form" class="range" style="display:grid; gap:15px;">
+              <div>
+                <label style="font-size:0.8rem;color:var(--muted)">草稿箱</label>
+                <div style="display:flex; gap:10px;">
+                  <select id="draft-select" style="flex:1;">
+                    <option value="">选择草稿（按主题）</option>
+                  </select>
+                  <button id="draft-refresh" class="secondary" type="button">刷新</button>
+                </div>
+              </div>
+              <div><label style="font-size:0.8rem;color:var(--muted)">收件人</label><input id="compose-to" type="email" required /></div>
+              <div><label style="font-size:0.8rem;color:var(--muted)">主题</label><input id="compose-subject" type="text" required /></div>
+              <div><textarea id="compose-body" style="min-height: 250px;" placeholder="正文内容..."></textarea></div>
+              <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button id="draft-save" class="secondary" type="button">保存草稿</button>
+                <button id="compose-send" type="submit">发送邮件</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <section class="chat-shell">
+        <div class="chat-header">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h2 style="margin:0; font-size:1.1rem;">Agent</h2>
+            <button id="agent-config-toggle" class="secondary" type="button" style="padding:4px 10px; font-size:0.8rem;">⚙ 设置</button>
+          </div>
+          <div class="chat-session-controls" style="display:flex; gap:8px;">
+            <select id="agent-session-select" style="font-size:0.85rem; padding:6px; flex:1;"></select>
+            <button id="agent-new-session" class="secondary" type="button" style="padding:6px 10px;">+</button>
+          </div>
+          <div class="footer" id="agent-status" style="margin-top:6px; font-size:0.75rem; color:var(--muted);">未配置</div>
+        </div>
+
+        <div id="agent-config-panel" class="chat-config-panel hidden">
+          <h4 style="margin:0 0 12px;">LLM 配置</h4>
+          <div style="display:grid; gap:12px;">
+            <input id="agent-api-key" type="password" placeholder="API Key" />
+            <input id="agent-base-url" type="text" placeholder="Base URL (可选)" />
+            <input id="agent-model" type="text" placeholder="Model (e.g. gemini-3)" />
+            <input id="agent-primary-email" type="email" placeholder="主要邮箱 (例如: you@example.com)" />
+            <textarea id="agent-system-prompt" placeholder="System Prompt (例如: 你是一个...助手)"></textarea>
+            <button id="agent-save-btn" type="button">保存配置</button>
+          </div>
+        </div>
+
+        <div class="chat-window">
+          <div id="agent-messages" class="chat-messages"></div>
+
+          <div class="chat-input-area">
+            <div class="footer" id="agent-hint" style="font-size:0.75rem; color:var(--muted);">准备就绪。</div>
+            <textarea id="chat-text" placeholder="输入指令 (Ctrl+Enter 发送)..." onkeydown="if(event.ctrlKey && event.keyCode==13){document.getElementById('chat-send').click();}"></textarea>
+            <div style="text-align:right;">
+              <button id="chat-send" type="button" style="padding:8px 24px;">发送</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </section>
+</div>
+
+<script>
+  const homeView = document.getElementById('home-view')
+  const managerView = document.getElementById('manager-view')
+
+  const statusText = document.getElementById('status-text')
+  const statusPill = document.getElementById('status-pill')
+  const homeSummary = document.getElementById('home-summary')
+
+  const loginBtn = document.getElementById('login-btn')
+  const enterBtn = document.getElementById('enter-btn')
+  const showImportBtn = document.getElementById('show-import-btn')
+  const importPanel = document.getElementById('import-panel')
+
+  // Auto Sync Elements
+  const autoSyncToggle = document.getElementById('auto-sync-toggle')
+  const autoSyncInterval = document.getElementById('auto-sync-interval')
+  const autoSyncOptionsDiv = document.getElementById('auto-sync-options')
+
+  const syncBtn = document.getElementById('sync-btn')
+  const fromInput = document.getElementById('from-date')
+  const toInput = document.getElementById('to-date')
+  const log = document.getElementById('log')
+
+  const backHomeBtn = document.getElementById('back-home-btn')
+  const importMoreBtn = document.getElementById('import-more-btn')
+  const refreshListBtn = document.getElementById('refresh-list-btn')
+  const managerEmail = document.getElementById('manager-email')
+  const managerCount = document.getElementById('manager-count')
+
+  const listPanel = document.getElementById('list-panel')
+  const detailPanel = document.getElementById('detail-panel')
+  const backListBtn = document.getElementById('back-list-btn')
+  const mailList = document.getElementById('mail-list')
+  const pagePrev = document.getElementById('page-prev')
+  const pageNext = document.getElementById('page-next')
+  const pageIndicator = document.getElementById('page-indicator')
+  const searchFrom = document.getElementById('search-from')
+  const searchSubject = document.getElementById('search-subject')
+  const searchThread = document.getElementById('search-thread')
+  const searchMessage = document.getElementById('search-message')
+  const searchBtn = document.getElementById('search-btn')
+  const detailSubject = document.getElementById('detail-subject')
+  const detailMeta = document.getElementById('detail-meta')
+  const detailBody = document.getElementById('detail-body')
+  const replyBtn = document.getElementById('reply-btn')
+  const orderSelect = document.getElementById('order-select')
+  const readFilter = document.getElementById('read-filter')
+  const loadBtn = document.getElementById('load-btn')
+  const tabInbox = document.getElementById('tab-inbox')
+  const tabSent = document.getElementById('tab-sent')
+  const tabCompose = document.getElementById('tab-compose')
+  const inboxToolbar = document.getElementById('inbox-toolbar')
+  const sentToolbar = document.getElementById('sent-toolbar')
+  const sentFromInput = document.getElementById('sent-from')
+  const sentToInput = document.getElementById('sent-to')
+  const sentRefreshBtn = document.getElementById('sent-refresh')
+  const composePanel = document.getElementById('compose-panel')
+  const composeForm = document.getElementById('compose-form')
+  const composeTo = document.getElementById('compose-to')
+  const composeSubject = document.getElementById('compose-subject')
+  const composeBody = document.getElementById('compose-body')
+  const draftSelect = document.getElementById('draft-select')
+  const draftRefreshBtn = document.getElementById('draft-refresh')
+  const draftSaveBtn = document.getElementById('draft-save')
+  const agentStatus = document.getElementById('agent-status')
+  const agentConfigToggle = document.getElementById('agent-config-toggle')
+  const agentConfigPanel = document.getElementById('agent-config-panel')
+  const agentApiKey = document.getElementById('agent-api-key')
+  const agentBaseUrl = document.getElementById('agent-base-url')
+  const agentModel = document.getElementById('agent-model')
+  const agentPrimaryEmail = document.getElementById('agent-primary-email')
+  const agentSystemPrompt = document.getElementById('agent-system-prompt')
+  const agentSaveBtn = document.getElementById('agent-save-btn')
+  const agentNewSessionBtn = document.getElementById('agent-new-session')
+  const agentSessionSelect = document.getElementById('agent-session-select')
+  const agentMessages = document.getElementById('agent-messages')
+  const agentHint = document.getElementById('agent-hint')
+  const chatText = document.getElementById('chat-text')
+  const chatSend = document.getElementById('chat-send')
+
+  let activeId = null
+  let cachedProfile = null
+  let loadingList = false
+  let currentView = 'inbox'
+  let currentMessage = null
+  let inboxOffset = 0
+  let inboxPage = 1
+  const inboxLimit = 50
+  let sentPage = 1
+  let sentPageTokens = [null]
+  let sentHasNext = false
+  let currentDraftId = null
+  let currentAgentSessionId = localStorage.getItem('agentSessionId')
+
+  const formatDate = (date) => date.toISOString().slice(0, 10)
+  const setDefaultRange = () => {
+    const today = new Date()
+    const utcToday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+    const from = new Date(utcToday)
+    from.setUTCDate(from.getUTCDate() - 6)
+    fromInput.value = formatDate(from)
+    toInput.value = formatDate(utcToday)
+  }
+
+  const setDefaultSentRange = () => {
+    const today = new Date()
+    const utcToday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+    const from = new Date(utcToday)
+    from.setUTCDate(from.getUTCDate() - 29)
+    if (sentFromInput) sentFromInput.value = formatDate(from)
+    if (sentToInput) sentToInput.value = formatDate(utcToday)
+  }
+
+  // === UI Helper for Auto Sync ===
+  const updateSyncUI = (enabled) => {
+    // 启用/禁用输入框，并设置样式
+    autoSyncInterval.disabled = !enabled
+    if (autoSyncOptionsDiv) {
+      autoSyncOptionsDiv.style.opacity = enabled ? '1' : '0.4'
+      autoSyncOptionsDiv.style.pointerEvents = enabled ? 'auto' : 'none'
+    }
+  }
+
+  const loadAutoSyncConfig = async () => {
+    try {
+      const data = await fetchJson('/api/auto-sync')
+      const enabled = Boolean(data.enabled)
+      autoSyncToggle.checked = enabled
+      autoSyncInterval.value = String(data.intervalMinutes || 30)
+      updateSyncUI(enabled)
+    } catch (err) {
+      autoSyncToggle.checked = false
+      autoSyncInterval.value = '30'
+      updateSyncUI(false)
+    }
+  }
+
+  const saveAutoSyncConfig = async () => {
+    const enabled = autoSyncToggle.checked
+    const rawInterval = Number(autoSyncInterval.value)
+    // 限制最小值为 1 分钟
+    const intervalMinutes = Math.max(1, rawInterval || 30)
+
+    // 如果用户输入了非法值，重置回 UI
+    if (rawInterval !== intervalMinutes) {
+      autoSyncInterval.value = intervalMinutes
+    }
+
+    updateSyncUI(enabled) // 立即更新 UI 状态
+
+    try {
+      const data = await fetchJson('/api/auto-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, intervalMinutes }),
+      })
+      console.log(`Auto sync saved: ${data.enabled}, ${data.intervalMinutes}m`)
+    } catch (err) {
+      console.error(`保存同步设置失败: ${err.message}`)
+      // 出错回滚状态
+      autoSyncToggle.checked = !enabled
+      updateSyncUI(!enabled)
+    }
+  }
+
+  const ensureDraftsLoaded = async () => {
+    if (draftSelect.options.length <= 1) {
+      await loadDrafts()
+    }
+  }
+
+  const loadDrafts = async () => {
+    try {
+      const data = await fetchJson('/api/drafts')
+      draftSelect.innerHTML = '<option value="">选择草稿（按主题）</option>'
+      data.drafts.forEach((draft) => {
+        const option = document.createElement('option')
+        option.value = draft.id
+        option.textContent = draft.subject || '(无主题)'
+        draftSelect.appendChild(option)
+      })
+    } catch (err) {
+      draftSelect.innerHTML = '<option value="">草稿加载失败</option>'
+    }
+  }
+
+  const loadDraft = async (id) => {
+    const data = await fetchJson(`/api/drafts/${id}`)
+    const draft = data.draft
+    currentDraftId = draft.id
+    composeTo.value = draft.to_email || ''
+    composeSubject.value = draft.subject || ''
+    composeBody.value = draft.text || ''
+    await fetchJson(`/api/drafts/${id}`, { method: 'DELETE' })
+    await loadDrafts()
+  }
+
+  const setStatus = (authorized, email) => {
+    statusPill.dataset.active = authorized ? 'true' : 'false'
+    statusText.textContent = authorized ? '已授权' : '未连接'
+    loginBtn.disabled = authorized
+    enterBtn.disabled = !authorized
+    showImportBtn.disabled = !authorized
+    syncBtn.disabled = !authorized
+    if (authorized) {
+      homeSummary.textContent = email ? `已连接：${email}` : '已连接'
+    } else {
+      homeSummary.textContent = '请先连接 Gmail（OAuth 授权）。'
+    }
+  }
+
+  const showHome = () => {
+    homeView.classList.remove('hidden')
+    managerView.classList.add('hidden')
+  }
+
+  const showManager = () => {
+    homeView.classList.add('hidden')
+    managerView.classList.remove('hidden')
+    ensureDraftsLoaded()
+  }
+
+  const showList = () => {
+    listPanel.classList.remove('hidden')
+    detailPanel.classList.add('hidden')
+  }
+
+  const showDetail = () => {
+    listPanel.classList.add('hidden')
+    detailPanel.classList.remove('hidden')
+  }
+  const disableReply = () => {
+    currentMessage = null
+    replyBtn.disabled = true
+  }
+
+  const switchView = (view) => {
+    currentView = view
+    tabInbox.classList.toggle('secondary', view !== 'inbox')
+    tabSent.classList.toggle('secondary', view !== 'sent')
+    tabCompose.classList.toggle('secondary', view !== 'compose')
+    inboxToolbar.classList.toggle('hidden', view !== 'inbox')
+    sentToolbar.classList.toggle('hidden', view !== 'sent')
+    composePanel.classList.toggle('hidden', view !== 'compose')
+    listPanel.classList.toggle('hidden', view === 'compose')
+    detailPanel.classList.add('hidden')
+    if (view === 'inbox' || view === 'sent') {
+      showList()
+      loadActiveList()
+    }
+  }
+
+  async function fetchJson(url, opts = {}) {
+    const res = await fetch(url, { cache: 'no-store', ...opts })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(text || `请求失败：${res.status}`)
+    }
+    return res.json()
+  }
+
+  const refreshProfile = async () => {
+    statusText.textContent = '正在检查授权状态...'
+    try {
+      const data = await fetchJson('/api/profile')
+      if (!data.authorized) {
+        const status = await fetchJson('/api/status')
+        cachedProfile = null
+        setStatus(Boolean(status.authorized), status.email || null)
+        return
+      }
+      cachedProfile = data
+      setStatus(true, data.email)
+      homeSummary.textContent = `已为 ${data.email} 导入 ${data.importedCount} 封邮件`
+      managerEmail.textContent = data.email
+      managerCount.textContent = `已导入：${data.importedCount} 封`
+      if (!homeView.classList.contains('hidden')) {
+        showManager()
+        showList()
+      }
+      await loadList()
+    } catch (err) {
+      statusText.textContent = '状态检查失败'
+    }
+  }
+
+  loginBtn.addEventListener('click', () => {
+    window.location.href = '/auth/start'
+  })
+
+  enterBtn.addEventListener('click', async () => {
+    await refreshProfile()
+    showManager()
+    showList()
+    await loadList()
+  })
+
+  showImportBtn.addEventListener('click', () => {
+    importPanel.classList.toggle('hidden')
+  })
+
+  // Auto Sync Listeners (Modified)
+  autoSyncToggle.addEventListener('change', () => {
+    saveAutoSyncConfig()
+  })
+
+  // 失去焦点时保存
+  autoSyncInterval.addEventListener('blur', saveAutoSyncConfig)
+  // 回车时触发失去焦点（进而保存）
+  autoSyncInterval.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      autoSyncInterval.blur()
+    }
+  })
+
+  backHomeBtn.addEventListener('click', () => {
+    showHome()
+  })
+
+  importMoreBtn.addEventListener('click', () => {
+    showHome()
+    importPanel.classList.remove('hidden')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+
+  refreshListBtn.addEventListener('click', async () => {
+    await refreshProfile()
+    await loadActiveList()
+  })
+
+  tabInbox.addEventListener('click', () => {
+    showManager()
+    switchView('inbox')
+  })
+
+  tabSent.addEventListener('click', () => {
+    showManager()
+    switchView('sent')
+  })
+
+  tabCompose.addEventListener('click', () => {
+    showManager()
+    switchView('compose')
+  })
+
+  loadBtn.addEventListener('click', loadList)
+  orderSelect.addEventListener('change', loadList)
+  readFilter.addEventListener('change', loadList)
+  sentRefreshBtn.addEventListener('click', loadSent)
+
+  backListBtn.addEventListener('click', () => {
+    showList()
+  })
+
+  document.getElementById('range-form').addEventListener('submit', async (event) => {
+    event.preventDefault()
+    const from = fromInput.value
+    const to = toInput.value
+    if (!from || !to) return
+    syncBtn.disabled = true
+    log.textContent = '正在导入...'
+    try {
+      const params = new URLSearchParams({ from, to, t: Date.now().toString() })
+      const data = await fetchJson(`/api/sync?${params.toString()}`)
+      if (data.skipped) {
+        log.textContent = `已跳过：该范围之前导入过（${data.email}，${data.from} ~ ${data.to}）。已导入总数：${data.importedCount}`
+      } else {
+        log.textContent = `导入完成：为 ${data.email} 处理 ${data.processed} 封邮件（${data.from} ~ ${data.to}）。已导入总数：${data.importedCount}`
+      }
+      await refreshProfile()
+      showManager()
+      showList()
+      await loadList()
+    } catch (err) {
+      log.textContent = `错误：${err.message || err}`
+    } finally {
+      syncBtn.disabled = false
+    }
+  })
+
+  composeForm.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    const to = composeTo.value.trim()
+    const subject = composeSubject.value.trim()
+    const body = composeBody.value
+    if (!to || !subject) {
+      log.textContent = '请填写收件人和主题'
+      return
+    }
+    try {
+      log.textContent = '正在发送...'
+      const payload = { to, subject, text: body }
+      await fetchJson('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      log.textContent = '发送成功'
+      composeBody.value = ''
+      currentDraftId = null
+      switchView('sent')
+    } catch (err) {
+      log.textContent = `发送失败：${err.message || err}`
+    }
+  })
+
+  draftRefreshBtn.addEventListener('click', async () => {
+    await loadDrafts()
+  })
+
+  draftSelect.addEventListener('change', async () => {
+    const id = draftSelect.value
+    if (!id) return
+    await loadDraft(id)
+    draftSelect.value = ''
+  })
+
+  draftSaveBtn.addEventListener('click', async () => {
+    const to = composeTo.value.trim()
+    const subject = composeSubject.value.trim()
+    if (!to || !subject) {
+      alert('请填写收件人和主题后再保存草稿。')
+      return
+    }
+    const payload = {
+      to,
+      subject,
+      text: composeBody.value,
+      id: currentDraftId || undefined,
+    }
+    const data = await fetchJson('/api/drafts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    currentDraftId = data.id
+    await loadDrafts()
+    alert('草稿已保存。')
+  })
+
+  replyBtn.addEventListener('click', () => {
+    if (!currentMessage) return
+    const from = currentMessage.from_email || ''
+    const subject = currentMessage.subject || ''
+    const bodyText = currentMessage.body_text || currentMessage.snippet || ''
+    const replySubject = subject.toLowerCase().startsWith('re:') ? subject : `Re: ${subject}`
+    composeTo.value = from
+    composeSubject.value = replySubject
+    composeBody.value = `\n\n--- 原邮件 ---\n${bodyText}`
+    switchView('compose')
+  })
+
+  const appendAgentMessage = (role, text) => {
+    const bubble = document.createElement('div')
+    bubble.className = `chat-bubble ${role}`
+    bubble.textContent = text
+    agentMessages.appendChild(bubble)
+    agentMessages.scrollTop = agentMessages.scrollHeight
+    return bubble
+  }
+
+  const extractAgentText = (event) => {
+    if (!event || typeof event !== 'object') return ''
+    if (event.type === 'text' && typeof event.content === 'string') {
+      return event.content
+    }
+    if (event.type === 'message' && event.message?.role === 'assistant') {
+      const parts = Array.isArray(event.message.content) ? event.message.content : []
+      return parts
+              .map((part) => (part?.type === 'text' ? part.text : ''))
+              .filter(Boolean)
+              .join('')
+    }
+    return ''
+  }
+
+  const setCurrentAgentSession = (sessionId) => {
+    currentAgentSessionId = sessionId
+    if (sessionId) {
+      localStorage.setItem('agentSessionId', sessionId)
+    } else {
+      localStorage.removeItem('agentSessionId')
+    }
+    if (agentSessionSelect) {
+      agentSessionSelect.value = sessionId || ''
+    }
+  }
+
+  const renderAgentHistory = (messages) => {
+    agentMessages.innerHTML = ''
+    messages.forEach((msg) => {
+      const role = msg.role === 'assistant' ? 'agent' : 'user'
+      appendAgentMessage(role, msg.content || '')
+    })
+  }
+
+  const loadAgentHistory = async (sessionId) => {
+    if (!sessionId) return
+    const data = await fetchJson(`/api/agent/sessions/${sessionId}/messages`)
+    renderAgentHistory(data.messages || [])
+  }
+
+  const loadAgentSessions = async () => {
+    try {
+      const data = await fetchJson('/api/agent/sessions')
+      const sessions = data.sessions || []
+      agentSessionSelect.innerHTML = ''
+      sessions.forEach((session) => {
+        const option = document.createElement('option')
+        option.value = session.id
+        option.textContent = session.title || session.id.slice(0, 8)
+        agentSessionSelect.appendChild(option)
+      })
+      const firstId = sessions[0]?.id || null
+      const desired = currentAgentSessionId && sessions.some((s) => s.id === currentAgentSessionId)
+              ? currentAgentSessionId
+              : firstId
+      if (desired) {
+        setCurrentAgentSession(desired)
+        await loadAgentHistory(desired)
+      }
+    } catch (err) {
+      agentSessionSelect.innerHTML = ''
+    }
+  }
+
+  const createNewAgentSession = async () => {
+    const data = await fetchJson('/api/agent/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    setCurrentAgentSession(data.id)
+    await loadAgentSessions()
+    await loadAgentHistory(data.id)
+  }
+
+  const loadAgentConfig = async () => {
+    try {
+      const data = await fetchJson('/api/agent/config')
+      agentStatus.textContent = data.hasApiKey ? '已配置' : '未配置'
+      agentHint.textContent = data.hasApiKey ? '可以开始对话。' : '请先配置 LLM API Key。'
+      agentApiKey.value = ''
+      agentApiKey.placeholder = data.apiKeyMasked || '未配置'
+      agentBaseUrl.value = data.baseUrl || ''
+      agentModel.value = data.model || 'gemini-3'
+      agentPrimaryEmail.value = data.primaryEmail || ''
+      agentSystemPrompt.value = data.systemPrompt || ''
+      chatSend.disabled = !data.hasApiKey
+    } catch (err) {
+      agentStatus.textContent = '配置加载失败'
+      chatSend.disabled = true
+    }
+  }
+
+  const saveAgentConfig = async () => {
+    try {
+      const payload = {
+        provider: 'openai',
+        apiKey: agentApiKey.value.trim(),
+        baseUrl: agentBaseUrl.value.trim(),
+        model: agentModel.value.trim(),
+        primaryEmail: agentPrimaryEmail.value.trim(),
+        systemPrompt: agentSystemPrompt.value.trim(),
+      }
+      const data = await fetchJson('/api/agent/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      agentStatus.textContent = data.hasApiKey ? '已配置' : '未配置'
+      agentHint.textContent = data.hasApiKey ? '可以开始对话。' : '请先配置 LLM API Key。'
+      agentApiKey.value = ''
+      agentApiKey.placeholder = data.apiKeyMasked || '未配置'
+      chatSend.disabled = !data.hasApiKey
+    } catch (err) {
+      agentStatus.textContent = '保存失败'
+    }
+  }
+
+  const stripAnsi = (text) => text.replace(/\u001b\[[0-9;]*m/g, '')
+
+  const streamAgentReply = async (prompt) => {
+    if (!currentAgentSessionId) {
+      await createNewAgentSession()
+    }
+    const res = await fetch('/api/agent/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: prompt,
+        model: agentModel.value.trim() || undefined,
+        sessionId: currentAgentSessionId || undefined,
+      }),
+    })
+
+    if (!res.ok) {
+      const text = await res.text()
+      appendAgentMessage('agent', `错误：${text}`)
+      return
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let output = ''
+    let sawCompleted = false
+    const hintMessages = new Set()
+    const agentBubble = appendAgentMessage('agent', '')
+
+    const addHintOnce = (hint) => {
+      if (hintMessages.has(hint)) return
+      hintMessages.add(hint)
+      output += `\n提示：${hint}\n`
+    }
+
+    const maybeAddHint = (raw) => {
+      const text = stripAnsi(String(raw || '')).trim()
+      if (!text) return
+      if (text.includes('approve-scripts') || text.includes('better-sqlite3')) {
+        addHintOnce('MCP 依赖需要执行 `deno approve-scripts`，或改用 Node + tsx 启动 MCP。')
+      }
+      if (text.includes('Failed to connect to MCP server') || text.includes('Connection closed')) {
+        addHintOnce('MCP 未能启动。请确认 `npm install` 已完成且 `gmail.sqlite` 存在。')
+      }
+      if (text.includes('node_modules/.bin/tsx') || text.includes('ENOENT')) {
+        addHintOnce('本地依赖可能未安装完成，请先运行 `npm install`。')
+      }
+    }
+
+    const processChunk = (chunk) => {
+      if (!chunk) return
+      const lines = chunk.split('\n').filter(Boolean)
+      let eventName = 'message'
+      for (const line of lines) {
+        const trimmedLine = line.trimStart()
+        if (trimmedLine.startsWith('event:')) {
+          eventName = trimmedLine.replace(/^event:\s*/, '').trim()
+          continue
+        }
+        if (!trimmedLine.startsWith('data:')) continue
+        const payload = trimmedLine.replace(/^data:\s*/, '')
+        try {
+          const parsed = JSON.parse(payload)
+          if (parsed.type === 'event') {
+            const text = extractAgentText(parsed.event)
+            if (text) {
+              if (parsed.event.type === 'message' && output.trim()) {
+                // Avoid duplicating final message after streaming tokens.
+              } else {
+                output += text
+              }
+            }
+            if (parsed.event?.type === 'completed') {
+              sawCompleted = true
+            }
+          } else if (parsed.type === 'start' && parsed.sessionId) {
+            setCurrentAgentSession(parsed.sessionId)
+          } else if (parsed.type === 'error') {
+            maybeAddHint(parsed.error || parsed.message)
+            output += `错误：${parsed.error || parsed.message}\n`
+          } else if (parsed.type === 'stderr' || eventName === 'stderr') {
+            maybeAddHint(parsed.message || payload)
+            output += `stderr: ${parsed.message || payload}\n`
+          }
+        } catch {
+          // Ignore non-JSON frames.
+        }
+        agentBubble.textContent = output.trim()
+      }
+    }
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      buffer = buffer.replace(/\r\n/g, '\n')
+      let idx = buffer.indexOf('\n\n')
+      while (idx !== -1) {
+        const chunk = buffer.slice(0, idx).trim()
+        buffer = buffer.slice(idx + 2)
+        processChunk(chunk)
+        idx = buffer.indexOf('\n\n')
+      }
+      if (sawCompleted) {
+        break
+      }
+    }
+
+    const leftover = buffer.trim()
+    if (leftover) {
+      processChunk(leftover)
+    }
+  }
+
+  agentConfigToggle.addEventListener('click', () => {
+    agentConfigPanel.classList.toggle('hidden')
+  })
+
+  agentSaveBtn.addEventListener('click', saveAgentConfig)
+  agentNewSessionBtn.addEventListener('click', async () => {
+    await createNewAgentSession()
+  })
+  agentSessionSelect.addEventListener('change', async () => {
+    const nextId = agentSessionSelect.value
+    if (!nextId) return
+    setCurrentAgentSession(nextId)
+    await loadAgentHistory(nextId)
+  })
+
+  chatSend.addEventListener('click', async () => {
+    const prompt = chatText.value.trim()
+    if (!prompt) return
+    appendAgentMessage('user', prompt)
+    chatText.value = ''
+    chatSend.disabled = true
+    try {
+      await streamAgentReply(prompt)
+    } finally {
+      chatSend.disabled = false
+    }
+  })
+
+  searchBtn.addEventListener('click', async () => {
+    const params = new URLSearchParams()
+    if (searchFrom.value.trim()) params.set('sender', searchFrom.value.trim())
+    if (searchSubject.value.trim()) params.set('subject', searchSubject.value.trim())
+    if (searchThread.value.trim()) params.set('thread_id', searchThread.value.trim())
+    if (searchMessage.value.trim()) params.set('message_id', searchMessage.value.trim())
+    if (!Array.from(params.keys()).length) {
+      alert('请至少输入一个搜索条件。')
+      return
+    }
+    try {
+      mailList.textContent = '搜索中...'
+      const data = await fetchJson(`/api/search?${params.toString()}`)
+      renderList(data.messages || [])
+      showList()
+    } catch (err) {
+      mailList.textContent = err.message || err
+    }
+  })
+
+  pagePrev.addEventListener('click', async () => {
+    if (loadingList) return
+    if (currentView === 'sent') {
+      if (sentPage <= 1) return
+      loadingList = true
+      sentPage -= 1
+      const token = sentPageTokens[sentPage - 1] || null
+      try {
+        const params = new URLSearchParams({
+          from: sentFromInput?.value || '',
+          to: sentToInput?.value || '',
+          limit: '50',
+          t: Date.now().toString(),
+        })
+        if (token) params.set('pageToken', token)
+        const data = await fetchJson(`/api/sent?${params.toString()}`)
+        const items = (data.messages || []).map((m) => ({
+          ...m,
+          from_email: m.to_email ? `To: ${m.to_email}` : '已发送',
+          is_read: 1,
+        }))
+        sentHasNext = Boolean(data.nextPageToken)
+        if (data.nextPageToken) {
+          sentPageTokens[sentPage] = data.nextPageToken
+        }
+        renderList(items)
+        pageIndicator.textContent = `第 ${sentPage} 页`
+        pagePrev.disabled = sentPage <= 1
+        pageNext.disabled = !sentHasNext
+      } catch (err) {
+        mailList.textContent = err.message || err
+      }
+      loadingList = false
+      return
+    }
+
+    if (inboxPage <= 1) return
+    loadingList = true
+    try {
+      inboxPage -= 1
+      inboxOffset = (inboxPage - 1) * inboxLimit
+      const params = new URLSearchParams({
+        order: orderSelect.value,
+        read: readFilter.value,
+        limit: String(inboxLimit),
+        offset: String(inboxOffset),
+        t: Date.now().toString(),
+      })
+      const data = await fetchJson(`/api/messages?${params.toString()}`)
+      renderList(data.messages || [])
+      pageIndicator.textContent = `第 ${inboxPage} 页`
+      pagePrev.disabled = inboxPage <= 1
+      pageNext.disabled = (data.messages || []).length < inboxLimit
+    } catch (err) {
+      mailList.textContent = err.message || err
+    }
+    loadingList = false
+  })
+
+  pageNext.addEventListener('click', async () => {
+    if (loadingList) return
+    if (currentView === 'sent') {
+      if (!sentHasNext) return
+      loadingList = true
+      const token = sentPageTokens[sentPage] || null
+      try {
+        const params = new URLSearchParams({
+          from: sentFromInput?.value || '',
+          to: sentToInput?.value || '',
+          limit: '50',
+          t: Date.now().toString(),
+        })
+        if (token) params.set('pageToken', token)
+        const data = await fetchJson(`/api/sent?${params.toString()}`)
+        const items = (data.messages || []).map((m) => ({
+          ...m,
+          from_email: m.to_email ? `To: ${m.to_email}` : '已发送',
+          is_read: 1,
+        }))
+        sentPage += 1
+        sentHasNext = Boolean(data.nextPageToken)
+        if (data.nextPageToken) {
+          sentPageTokens[sentPage] = data.nextPageToken
+        }
+        renderList(items)
+        pageIndicator.textContent = `第 ${sentPage} 页`
+        pagePrev.disabled = sentPage <= 1
+        pageNext.disabled = !sentHasNext
+      } catch (err) {
+        mailList.textContent = err.message || err
+      }
+      loadingList = false
+      return
+    }
+
+    loadingList = true
+    try {
+      inboxPage += 1
+      inboxOffset = (inboxPage - 1) * inboxLimit
+      const params = new URLSearchParams({
+        order: orderSelect.value,
+        read: readFilter.value,
+        limit: String(inboxLimit),
+        offset: String(inboxOffset),
+        t: Date.now().toString(),
+      })
+      const data = await fetchJson(`/api/messages?${params.toString()}`)
+      const items = data.messages || []
+      renderList(items)
+      pageIndicator.textContent = `第 ${inboxPage} 页`
+      pagePrev.disabled = inboxPage <= 1
+      pageNext.disabled = items.length < inboxLimit
+    } catch (err) {
+      mailList.textContent = err.message || err
+    }
+    loadingList = false
+  })
+
+  function renderList(messages, append = false) {
+    if (!append) {
+      mailList.innerHTML = ''
+    }
+    if (!messages.length) {
+      mailList.textContent = '没有邮件（或尚未导入）。'
+      return
+    }
+    messages.forEach((msg) => {
+      const item = document.createElement('div')
+      item.className = 'mail-item'
+      item.dataset.id = msg.id
+      if (msg.id === activeId) item.classList.add('active')
+
+      const subject = document.createElement('div')
+      subject.className = 'mail-subject'
+      subject.textContent = msg.subject || '(无主题)'
+
+      const meta = document.createElement('div')
+      meta.className = 'mail-meta'
+      const from = document.createElement('span')
+      from.textContent = msg.from_email || '未知发件人'
+      const date = document.createElement('span')
+      date.textContent = msg.date || '未知日期'
+      meta.append(from, date)
+
+      const snippet = document.createElement('div')
+      snippet.style.color = 'var(--muted)'
+      snippet.style.fontSize = '0.9rem'
+      snippet.style.marginTop = '6px'
+      snippet.textContent = msg.snippet || ''
+
+      const readStatus = document.createElement('div')
+      readStatus.className = 'mail-read'
+      readStatus.style.marginTop = '8px'
+      const checkbox = document.createElement('input')
+      checkbox.type = 'checkbox'
+      checkbox.checked = Boolean(msg.is_read)
+      checkbox.disabled = true
+      const label = document.createElement('span')
+      label.textContent = msg.is_read ? ' 已读' : ' 未读'
+      label.style.marginLeft = '4px'
+      label.style.fontSize = '0.8rem'
+      readStatus.append(checkbox, label)
+
+      item.append(subject, meta, snippet, readStatus)
+      item.addEventListener('click', () => loadDetail(msg.id))
+      mailList.appendChild(item)
+    })
+  }
+
+  async function loadList() {
+    if (loadingList) return
+    loadingList = true
+    try {
+      mailList.textContent = '加载中...'
+      inboxPage = 1
+      inboxOffset = 0
+      const params = new URLSearchParams({
+        order: orderSelect.value,
+        read: readFilter.value,
+        limit: String(inboxLimit),
+        offset: String(inboxOffset),
+        t: Date.now().toString(),
+      })
+      const data = await fetchJson(`/api/messages?${params.toString()}`)
+      renderList(data.messages || [])
+      inboxOffset += (data.messages || []).length
+      pageIndicator.textContent = `第 ${inboxPage} 页`
+      pagePrev.disabled = inboxPage <= 1
+      pageNext.disabled = (data.messages || []).length < inboxLimit
+    } catch (err) {
+      const msg = `错误：${err.message || err}`
+      mailList.textContent = msg
+      log.textContent = msg
+    }
+    loadingList = false
+  }
+
+  async function loadSent() {
+    if (loadingList) return
+    loadingList = true
+    try {
+      mailList.textContent = '加载中...'
+      sentPage = 1
+      sentPageTokens = [null]
+      const params = new URLSearchParams({
+        from: sentFromInput?.value || '',
+        to: sentToInput?.value || '',
+        limit: '50',
+        t: Date.now().toString(),
+      })
+      const data = await fetchJson(`/api/sent?${params.toString()}`)
+      const items = (data.messages || []).map((m) => ({
+        ...m,
+        from_email: m.to_email ? `To: ${m.to_email}` : '已发送',
+        is_read: 1,
+      }))
+      sentHasNext = Boolean(data.nextPageToken)
+      if (data.nextPageToken) {
+        sentPageTokens[1] = data.nextPageToken
+      }
+      renderList(items)
+      pageIndicator.textContent = `第 ${sentPage} 页`
+      pagePrev.disabled = sentPage <= 1
+      pageNext.disabled = !sentHasNext
+    } catch (err) {
+      const msg = `错误：${err.message || err}`
+      mailList.textContent = msg
+      log.textContent = msg
+    }
+    loadingList = false
+  }
+
+  const loadActiveList = () => {
+    if (currentView === 'sent') return loadSent()
+    return loadList()
+  }
+
+  const loadDetail = async (id) => {
+    activeId = id
+    try {
+      detailSubject.textContent = '加载中...'
+      detailMeta.textContent = ''
+      detailBody.textContent = ''
+      disableReply()
+      const res = await fetch(`/api/messages/${id}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '加载失败')
+
+      detailSubject.textContent = data.subject || '(无主题)'
+      detailMeta.textContent = `${data.from_email || '未知发件人'} · ${data.date || ''} · ${data.is_read ? '已读' : '未读'}`
+
+      detailBody.innerHTML = ''
+      if (data.body_html) {
+        const iframe = document.createElement('iframe')
+        iframe.setAttribute('sandbox', '')
+        iframe.srcdoc = data.body_html
+        detailBody.appendChild(iframe)
+      } else {
+        const pre = document.createElement('pre')
+        pre.style.whiteSpace = 'pre-wrap'
+        pre.style.margin = '0'
+        pre.textContent = data.body_text || data.snippet || ''
+        detailBody.appendChild(pre)
+      }
+
+      Array.from(mailList.children).forEach((child) => {
+        child.classList.toggle('active', child.dataset.id === id)
+      })
+
+      currentMessage = data
+      replyBtn.disabled = false
+      showDetail()
+    } catch (err) {
+      detailSubject.textContent = '错误'
+      detailBody.textContent = err.message || err
+    }
+  }
+
+  setDefaultRange()
+  setDefaultSentRange()
+  showHome()
+  refreshProfile()
+  loadAgentConfig()
+  loadAgentSessions()
+  loadAutoSyncConfig()
+</script>
+</body>
+</html>

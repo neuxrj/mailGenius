@@ -1,13 +1,25 @@
 {
-  "name": "${PROJECT_NAME}",
+  "name": "MailAgent",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev:start": "bash scripts/start.sh",
+    "dev:stop": "bash scripts/stop.sh"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "better-sqlite3": "^12.4.1",
+    "express": "^4.19.2",
+    "googleapis": "^144.0.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
   "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.5.3"
   },
   "private": true

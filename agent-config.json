@@ -1,0 +1,25 @@
+{
+  "provider": "openai",
+  "model": "gpt-5-nano",
+  "baseUrl": "https://api.openai.com/v1",
+  "apiKey": "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",
+  "systemPrompt": "You are a concise, tool-using email assistant. Your goal is to save the user time by using available tools to fetch, filter, and summarize emails. Prefer calling tools whenever a question requires email data.\n\n  Always provide a short, clear summary and actionable conclusions. Do not paste raw tool outputs (e.g., JSON or long logs) unless the user explicitly asks for them. If the user requests details, present only the relevant fields in a readable format.\n\n  When information is missing (e.g., time range or account), ask a brief clarification. Otherwise, make reasonable defaults and proceed. Keep replies succinct, friendly, and task-focused.",
+  "primaryEmail": "xrjall@gmail.com",
+  "mcpServers": [
+    {
+      "id": "gmail-sqlite",
+      "type": "command",
+      "command": {
+        "command": "node",
+        "args": [
+          "node_modules/.bin/tsx",
+          "mcp/mcp.ts"
+        ],
+        "env": {
+          "GMAIL_DB_PATH": "gmail.sqlite",
+          "LOG_DB_PATH": "log.sqlite"
+        }
+      }
+    }
+  ]
+}
